@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#141414" />
+<title>Area Supa Ventures — Collector Login</title>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          gold: '#C59A3F',
+          goldHover: '#B08632',
+          goldLight: '#DFB04F',
+          goldDark: '#9E7422',
+          charcoal: '#212121',
+          charcoalDark: '#141414',
+          warmWhite: '#FBF9F5',
+          surface: '#FFFFFF',
+          inputBorder: '#E5E1D8',
+          muted: '#7A756D',
+          borderMuted: '#EFECE6'
+        }
+      },
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
+      }
+    }
+  }
+};
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { user-select: none; }
+  input, button, a { user-select: auto; }
+
+  .gold-seal-border {
+    box-shadow: inset 0 0 0 1px rgba(212, 163, 56, 0.4),
+                0 0 25px rgba(201, 151, 56, 0.15);
+  }
+
+  /* Splash / Login transitions */
+  .fade-slow { transition: opacity 600ms ease; }
+  .fade-in   { animation: fadeIn 450ms ease both; }
+  .fade-up   { animation: fadeUp 500ms ease both; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Subtle animated loading dots on splash */
+  .dot-pulse { animation: dotPulse 1.2s infinite ease-in-out; }
+  .dot-pulse:nth-child(2) { animation-delay: 0.15s; }
+  .dot-pulse:nth-child(3) { animation-delay: 0.30s; }
+  @keyframes dotPulse {
+    0%, 80%, 100% { opacity: 0.35; transform: scale(0.85); }
+    40%           { opacity: 1;    transform: scale(1); }
+  }
+
+  /* Hide spin buttons on numeric OTP inputs */
+  input[type="tel"]::-webkit-outer-spin-button,
+  input[type="tel"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+</style>
+</head>
+
+<body class="bg-stone-100 font-sans text-stone-900 antialiased">
+
+<!-- ============================= SPLASH ============================= -->
+<div id="splash"
+     class="fixed inset-0 z-50 bg-[#141414] flex items-center justify-center fade-slow">
+  <div class="flex flex-col items-center text-center px-6 fade-in">
+
+    <!-- Gold Seal Emblem -->
+    <img src="logo-b.png" alt="">
+
+    <!-- Wordmark -->
+    <h2 class="mt-8 text-xs sm:text-sm font-semibold tracking-[0.25em] text-brand-gold uppercase">
+      Area Supa Ventures
+    </h2>
+
+    <div class="pt-1.5">
+      <h1 class="text-2xl sm:text-[26px] font-bold tracking-tight text-brand-gold leading-snug">
+        Secure Savings.
+      </h1>
+      <p class="text-xl sm:text-[22px] font-semibold tracking-tight text-white/95 leading-snug">
+        Trusted Service.
+      </p>
+    </div>
+
+    <div class="mt-7 flex items-center justify-center gap-2 w-full max-w-[180px]">
+      <span class="h-px bg-white/20 flex-1"></span>
+      <span class="text-[10px] font-semibold tracking-[0.2em] text-white/40 uppercase">Collector App</span>
+      <span class="h-px bg-white/20 flex-1"></span>
+    </div>
+
+    <!-- Loading dots -->
+    <div class="mt-10 flex gap-1.5">
+      <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-brand-gold"></span>
+      <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-brand-gold"></span>
+      <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-brand-gold"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= LOGIN ============================= -->
+<div id="login" class="hidden min-h-screen w-full">
+
+  <div class="flex flex-col lg:flex-row min-h-screen">
+
+    <!-- LEFT: Brand panel (hidden on mobile, shows on lg+) -->
+    <aside class="hidden lg:flex lg:w-[45%] xl:w-[42%] bg-[#141414] relative overflow-hidden items-center justify-center px-10 py-16">
+
+      <!-- Decorative glow -->
+      <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-brand-gold/10 blur-3xl"></div>
+      <div class="absolute -bottom-32 -right-24 w-[28rem] h-[28rem] rounded-full bg-brand-gold/5 blur-3xl"></div>
+
+      <div class="relative z-10 flex flex-col items-center text-center max-w-sm">
+
+        <!-- Seal -->
+        <img src="logo-b.png" alt="">
+
+        <h1 class="mt-8 text-3xl font-bold tracking-tight text-brand-gold leading-snug">
+          Secure Savings.
+        </h1>
+        <p class="text-2xl font-semibold tracking-tight text-white/95 leading-snug">
+          Trusted Service.
+        </p>
+
+        <p class="mt-6 text-sm text-white/50 leading-relaxed">
+          Manage your susu customers, record daily deposits and withdrawals, and keep every cedi accounted for.
+        </p>
+
+        <div class="mt-8 flex items-center justify-center gap-2 w-full max-w-[180px]">
+          <span class="h-px bg-white/20 flex-1"></span>
+          <span class="text-[10px] font-semibold tracking-[0.2em] text-white/40 uppercase">Collector App</span>
+          <span class="h-px bg-white/20 flex-1"></span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Form panel -->
+    <main class="flex-1 flex items-center justify-center bg-[#FBF9F5] px-5 sm:px-8 py-10 lg:py-16">
+
+      <div class="w-full max-w-[420px] fade-up">
+
+        <!-- Mobile-only compact brand header -->
+        <div class="lg:hidden flex flex-col items-center text-center mb-8">
+          <img src="logo-b.png" width="120px">
+        </div>
+
+        <!-- Heading -->
+        <div class="mb-7">
+          <h1 class="text-2xl sm:text-[28px] font-bold tracking-tight text-stone-900">Welcome back</h1>
+          <p class="text-sm text-stone-500 mt-1.5">Sign in to continue to your dashboard</p>
+        </div>
+
+        <!-- Error banner -->
+        <div id="errorBox" class="hidden mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
+          <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+          <span id="errorText">Something went wrong.</span>
+        </div>
+
+        <!-- Success banner -->
+        <div id="successBox" class="hidden mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 flex items-start gap-2">
+          <i class="fa-solid fa-circle-check mt-0.5"></i>
+          <span id="successText">Signed in.</span>
+        </div>
+
+        <!-- ============ STEP 1: Credentials form ============ -->
+        <form id="loginForm" class="space-y-4" novalidate>
+
+          <!-- Identifier -->
+          <div class="space-y-1.5">
+            <label for="identifier" class="block text-xs font-medium text-stone-600">Phone or email</label>
+            <div class="relative flex items-center">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                <i class="fa-regular fa-user text-[14px]"></i>
+              </span>
+              <input id="identifier" name="identifier" type="text" autocomplete="username"
+                     placeholder="024 555 0192 or you@example.com"
+                     class="w-full pl-10 pr-4 py-3 bg-white text-stone-800 text-sm font-medium rounded-xl border border-[#E5E1D8] shadow-sm outline-none transition-colors focus:ring-1 focus:ring-brand-gold focus:border-brand-gold" />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-1.5">
+            <label for="password" class="block text-xs font-medium text-stone-600">Password</label>
+            <div class="relative flex items-center">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                <i class="fa-solid fa-lock text-[14px]"></i>
+              </span>
+              <input id="password" name="password" type="password" autocomplete="current-password"
+                     placeholder="Enter your password"
+                     class="w-full pl-10 pr-10 py-3 bg-white text-stone-800 text-sm font-medium tracking-widest rounded-xl border border-[#E5E1D8] shadow-sm outline-none transition-colors focus:ring-1 focus:ring-brand-gold focus:border-brand-gold" />
+              <button type="button" id="togglePassword" aria-label="Show password"
+                      class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600 transition-colors">
+                <i id="togglePasswordIcon" class="fa-regular fa-eye text-[14px]"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember + Forgot -->
+          <div class="flex items-center justify-between pt-1">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input id="rememberMe" type="checkbox"
+                     class="w-4 h-4 rounded border-[#D2CDC3] text-brand-charcoal focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+              <span class="text-[12px] text-stone-600">Remember me</span>
+            </label>
+            <a href="#" id="forgotLink" class="text-[12px] font-medium text-brand-gold hover:text-brand-goldHover hover:underline transition-colors">
+              Forgot password?
+            </a>
+          </div>
+
+          <!-- Submit -->
+          <div class="pt-2">
+            <button id="loginBtn" type="submit"
+                    class="w-full py-3.5 bg-[#212121] hover:bg-[#141414] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow transition-all duration-150 flex items-center justify-center gap-2">
+              <span id="loginBtnLabel">Login</span>
+              <i id="loginBtnSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-[13px]"></i>
+            </button>
+          </div>
+
+          <!-- Hint for phone users -->
+          <p class="text-[11px] text-stone-400 text-center leading-relaxed pt-1">
+            Enter your email to sign in with password. Enter your phone number to receive a one-time code.
+          </p>
+        </form>
+
+        <!-- ============ STEP 2: OTP verification (hidden) ============ -->
+        <form id="otpForm" class="hidden space-y-4" novalidate>
+
+          <div class="rounded-xl bg-white border border-[#EFECE6] px-4 py-3 flex items-start gap-3">
+            <i class="fa-solid fa-comment-sms text-brand-gold mt-0.5"></i>
+            <div class="text-[12.5px] text-stone-600 leading-relaxed">
+              We sent a 6-digit code to
+              <span id="otpPhoneLabel" class="font-semibold text-stone-800"></span>.
+              Enter it below to continue.
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="otpCode" class="block text-xs font-medium text-stone-600">Verification code</label>
+            <div class="relative flex items-center">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                <i class="fa-solid fa-shield-halved text-[14px]"></i>
+              </span>
+              <input id="otpCode" name="otpCode" type="tel" inputmode="numeric" autocomplete="one-time-code"
+                     maxlength="6" placeholder="• • • • • •"
+                     class="w-full pl-10 pr-4 py-3 bg-white text-stone-800 text-base tracking-[0.5em] font-semibold text-center rounded-xl border border-[#E5E1D8] shadow-sm outline-none transition-colors focus:ring-1 focus:ring-brand-gold focus:border-brand-gold" />
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <button id="verifyBtn" type="submit"
+                    class="w-full py-3.5 bg-[#212121] hover:bg-[#141414] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow transition-all duration-150 flex items-center justify-center gap-2">
+              <span id="verifyBtnLabel">Verify &amp; Sign in</span>
+              <i id="verifyBtnSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-[13px]"></i>
+            </button>
+          </div>
+
+          <button type="button" id="backToLogin"
+                  class="w-full text-center text-[12px] font-medium text-stone-500 hover:text-stone-700 transition-colors">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Use a different account
+          </button>
+        </form>
+
+        <!-- Security microcopy -->
+        <div class="mt-8 text-center">
+          <div class="inline-flex items-center gap-1.5 text-[11px] text-stone-400">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Protected by secure sign-in</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Invisible reCAPTCHA container for phone auth -->
+<div id="recaptcha-container"></div>
+
+<!-- ============================= SCRIPT ============================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  signInWithEmailAndPassword,
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* ---------- Firebase init ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
+  authDomain: "area-supa-ventures.firebaseapp.com",
+  projectId: "area-supa-ventures",
+  storageBucket: "area-supa-ventures.firebasestorage.app",
+  messagingSenderId: "339989502774",
+  appId: "1:339989502774:web:6cbf99587d4317af0a7197",
+  measurementId: "G-WDJCSK78QE"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.location.replace('dashboard.html');
+  }
+});
+
+/* ---------- UI refs ---------- */
+const splash         = document.getElementById('splash');
+const login          = document.getElementById('login');
+
+const loginForm      = document.getElementById('loginForm');
+const otpForm        = document.getElementById('otpForm');
+
+const identifierEl   = document.getElementById('identifier');
+const passwordEl     = document.getElementById('password');
+const rememberEl     = document.getElementById('rememberMe');
+const forgotLink     = document.getElementById('forgotLink');
+
+const loginBtn       = document.getElementById('loginBtn');
+const loginBtnLabel  = document.getElementById('loginBtnLabel');
+const loginBtnSpin   = document.getElementById('loginBtnSpinner');
+
+const verifyBtn      = document.getElementById('verifyBtn');
+const verifyBtnLabel = document.getElementById('verifyBtnLabel');
+const verifyBtnSpin  = document.getElementById('verifyBtnSpinner');
+const otpCodeEl      = document.getElementById('otpCode');
+const otpPhoneLabel  = document.getElementById('otpPhoneLabel');
+const backToLogin    = document.getElementById('backToLogin');
+
+const togglePassword = document.getElementById('togglePassword');
+const togglePassIcon = document.getElementById('togglePasswordIcon');
+
+const errorBox       = document.getElementById('errorBox');
+const errorText      = document.getElementById('errorText');
+const successBox     = document.getElementById('successBox');
+const successText    = document.getElementById('successText');
+
+/* ---------- Splash → Login transition ---------- */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    splash.classList.add('opacity-0');
+    setTimeout(() => {
+      splash.remove();
+      login.classList.remove('hidden');
+    }, 600);
+  }, 2400);
+});
+
+/* ---------- Helpers ---------- */
+function showError(message) {
+  successBox.classList.add('hidden');
+  errorText.textContent = message;
+  errorBox.classList.remove('hidden');
+}
+function hideError() { errorBox.classList.add('hidden'); }
+
+function showSuccess(message) {
+  errorBox.classList.add('hidden');
+  successText.textContent = message;
+  successBox.classList.remove('hidden');
+}
+
+function setLoading(button, labelEl, spinnerEl, isLoading, originalLabel) {
+  button.disabled = isLoading;
+  spinnerEl.classList.toggle('hidden', !isLoading);
+  labelEl.textContent = isLoading ? 'Please wait…' : originalLabel;
+}
+
+/* Convert Ghanaian numbers to E.164 (+233…) */
+function toE164(raw) {
+  let p = String(raw).replace(/[\s\-()]/g, '');
+  if (p.startsWith('+')) return p;
+  if (p.startsWith('00')) return '+' + p.slice(2);
+  if (p.startsWith('0'))  return '+233' + p.slice(1);
+  if (p.startsWith('233')) return '+' + p;
+  return '+233' + p;
+}
+function looksLikeEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function looksLikePhone(v) { return /^[+\d][\d\s\-()]{6,}$/.test(v); }
+
+/* ---------- Password visibility toggle ---------- */
+togglePassword.addEventListener('click', () => {
+  const isPwd = passwordEl.type === 'password';
+  passwordEl.type = isPwd ? 'text' : 'password';
+  togglePassIcon.className = isPwd
+    ? 'fa-regular fa-eye-slash text-[14px]'
+    : 'fa-regular fa-eye text-[14px]';
+  togglePassword.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+});
+
+/* ---------- Forgot password (email flow) ---------- */
+forgotLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  const id = identifierEl.value.trim();
+  if (!looksLikeEmail(id)) {
+    showError('Enter your email address first, then tap "Forgot password?".');
+    identifierEl.focus();
+    return;
+  }
+  showSuccess(`A reset link will be sent to ${id} (implement sendPasswordResetEmail in the next step).`);
+});
+
+/* ---------- Email / Password login ---------- */
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideError();
+
+  const raw = identifierEl.value.trim();
+  const pwd = passwordEl.value;
+
+  if (!raw) { showError('Please enter your phone number or email.'); return; }
+
+  // Email path
+  if (looksLikeEmail(raw)) {
+    if (!pwd) { showError('Please enter your password.'); return; }
+
+    try {
+      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, true);
+      await setPersistence(auth,
+        rememberEl.checked ? browserLocalPersistence : browserSessionPersistence);
+      await signInWithEmailAndPassword(auth, raw, pwd);
+      showSuccess('Signed in successfully. Loading your dashboard…');
+
+    } catch (err) {
+      console.error(err);
+      showError(prettyAuthError(err));
+    } finally {
+      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, false, 'Login');
+    }
+    return;
+  }
+
+  // Phone path
+  if (looksLikePhone(raw)) {
+    try {
+      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, true);
+
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: () => {}
+        });
+      }
+
+      const phoneE164 = toE164(raw);
+      const confirmation = await signInWithPhoneNumber(auth, phoneE164, window.recaptchaVerifier);
+      window.confirmationResult = confirmation;
+
+      otpPhoneLabel.textContent = phoneE164;
+      loginForm.classList.add('hidden');
+      otpForm.classList.remove('hidden');
+      otpCodeEl.value = '';
+      otpCodeEl.focus();
+      hideError();
+
+    } catch (err) {
+      console.error(err);
+      showError(prettyAuthError(err));
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch (_) {}
+        window.recaptchaVerifier = null;
+      }
+    } finally {
+      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, false, 'Login');
+    }
+    return;
+  }
+
+  showError('Enter a valid phone number or email address.');
+});
+
+/* ---------- OTP verification ---------- */
+otpForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideError();
+
+  const code = otpCodeEl.value.trim();
+  if (code.length !== 6) { showError('Enter the 6-digit code we sent you.'); return; }
+
+  try {
+    setLoading(verifyBtn, verifyBtnLabel, verifyBtnSpin, true);
+    const result = await window.confirmationResult.confirm(code);
+    console.log('Signed in user:', result.user);
+    showSuccess('Verified. Loading your dashboard…');
+    // TODO: window.location.href = 'dashboard.html';
+  } catch (err) {
+    console.error(err);
+    showError('That code is incorrect or has expired. Please try again.');
+  } finally {
+    setLoading(verifyBtn, verifyBtnLabel, verifyBtnSpin, false, 'Verify & Sign in');
+  }
+});
+
+/* ---------- Back to login ---------- */
+backToLogin.addEventListener('click', () => {
+  otpForm.classList.add('hidden');
+  loginForm.classList.remove('hidden');
+  hideError();
+  passwordEl.value = '';
+});
+
+/* ---------- Friendly error messages ---------- */
+function prettyAuthError(err) {
+  const code = err?.code || '';
+  switch (code) {
+    case 'auth/invalid-email':            return 'That email address doesn’t look right.';
+    case 'auth/user-disabled':            return 'This account has been disabled. Contact the owner.';
+    case 'auth/user-not-found':           return 'No account found with those details.';
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':       return 'Incorrect phone/email or password.';
+    case 'auth/too-many-requests':        return 'Too many attempts. Please wait a moment and try again.';
+    case 'auth/invalid-phone-number':     return 'That phone number is not valid. Use a Ghana number, e.g. 024 555 0192.';
+    case 'auth/quota-exceeded':           return 'SMS quota exceeded. Try again later.';
+    case 'auth/network-request-failed':   return 'Network error. Check your internet connection.';
+    case 'auth/captcha-check-failed':     return 'Security check failed. Please refresh the page.';
+    default:                              return err?.message || 'Something went wrong. Please try again.';
+  }
+}
+</script>
+
+</body>
+</html>

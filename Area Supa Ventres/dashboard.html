@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#FBF9F5" />
+<title>Dashboard — Area Supa Ventures</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        'brand-gold':      '#C59A3F',
+        'brand-gold-dark': '#B08632',
+        'brand-charcoal':  '#212121',
+        'brand-bg':        '#F8F6F2',
+        'brand-success':   '#1B7F4B',
+        'brand-danger':    '#B93838',
+      },
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+      },
+    },
+  },
+};
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { user-select: none; background: #F8F6F2; }
+  input, button, a { user-select: auto; }
+
+  ::-webkit-scrollbar { display: none; }
+  * { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(90deg, #e7e5e4 0%, #f5f4f2 50%, #e7e5e4 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+  .skeleton-dark {
+    background: linear-gradient(90deg, #2b2a27 0%, #3a3833 50%, #2b2a27 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .fade-up { animation: fadeUp 400ms ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen">
+
+<!-- ======================= HEADER ======================= -->
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+
+    <!-- Brand -->
+    <div class="flex items-center gap-3 min-w-0">
+      <img src="logo-b.png" alt="Area Supa Ventures"
+           class="h-10 w-10 rounded-full object-contain shrink-0" />
+      <div class="min-w-0">
+        <p class="text-[13px] sm:text-sm font-bold text-stone-900 truncate">Area Supa Ventures</p>
+        <p class="text-[11px] text-stone-500 truncate">Collector Dashboard</p>
+      </div>
+    </div>
+
+        <!-- Right controls -->
+        <div class="flex items-center gap-1.5">
+        <div id="syncStatus" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border bg-stone-100 border-stone-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span>
+            <span class="text-[11px] font-semibold text-stone-600">Checking…</span>
+        </div>
+
+        <a id="bellBtn" href="notifications.html" aria-label="Notifications"
+            class="relative w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+            <i class="fa-regular fa-bell text-[15px]"></i>
+            <span id="bellBadge"
+                class="hidden absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#B93838] text-white text-[10px] font-bold flex items-center justify-center leading-none">
+            </span>
+        </a>
+
+        <button id="refreshBtn" type="button" aria-label="Refresh"
+                class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+            <i class="fa-solid fa-rotate-right text-[14px]"></i>
+        </button>
+
+        <button id="logoutBtn" type="button" aria-label="Logout"
+                class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+            <i class="fa-solid fa-right-from-bracket text-[14px]"></i>
+        </button>
+        </div>
+  </div>
+</header>
+
+<!-- ======================= MAIN ======================= -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24">
+
+  <!-- Error banner -->
+  <div id="loadError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+    <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-red-800">Couldn’t load your dashboard</p>
+      <p id="loadErrorMsg" class="text-[12px] text-red-700 mt-0.5">
+        Check your internet connection and try again.
+      </p>
+      <button id="retryBtn" type="button"
+              class="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-800 hover:text-red-900 underline underline-offset-2">
+        <i class="fa-solid fa-rotate-right text-[11px]"></i> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== Greeting ===== -->
+  <section class="mb-6 fade-up">
+    <!-- Date eyebrow (top) -->
+    <p id="todayDate"
+       class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-1.5 flex items-center gap-2">
+      <i class="fa-regular fa-calendar text-[10px]"></i>
+      <span id="todayDateText" class="skeleton inline-block w-40 h-3 align-middle"></span>
+    </p>
+
+    <!-- Greeting (bottom) -->
+    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 leading-tight flex items-center gap-2 flex-wrap min-h-[2.25rem]">
+      <span id="greetingText" class="skeleton inline-block w-56 h-8 align-middle"></span>
+      <span id="greetingWave" class="hidden select-none">👋</span>
+    </h1>
+  </section>
+
+  <!-- ===== Metric cards ===== -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+
+    <!-- Today's deposits -->
+    <div class="rounded-2xl bg-[#20201E] text-white p-5 relative overflow-hidden fade-up">
+      <div class="absolute -right-6 -top-6 w-28 h-28 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="relative">
+        <div class="flex items-center gap-2 text-stone-400 text-[11px] font-medium uppercase tracking-wider">
+          <i class="fa-solid fa-arrow-down-to-line text-[10px]"></i>
+          Today’s deposits
+        </div>
+        <div id="todayDepositsAmount" class="mt-2 text-2xl font-bold flex items-baseline gap-0.5">
+          <span class="skeleton-dark inline-block w-28 h-7"></span>
+        </div>
+        <p id="todayDepositsSub" class="mt-1.5 text-[11px] text-stone-400">
+          <span class="skeleton-dark inline-block w-24 h-3"></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Today's withdrawals -->
+    <div class="rounded-2xl bg-[#20201E] text-white p-5 relative overflow-hidden fade-up">
+      <div class="absolute -right-6 -top-6 w-28 h-28 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="relative">
+        <div class="flex items-center gap-2 text-stone-400 text-[11px] font-medium uppercase tracking-wider">
+          <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
+          Today’s withdrawals
+        </div>
+        <div id="todayWithdrawalsAmount" class="mt-2 text-2xl font-bold flex items-baseline gap-0.5">
+          <span class="skeleton-dark inline-block w-28 h-7"></span>
+        </div>
+        <p id="todayWithdrawalsSub" class="mt-1.5 text-[11px] text-stone-400">
+          <span class="skeleton-dark inline-block w-24 h-3"></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Total customers -->
+    <div class="rounded-2xl bg-white border border-stone-200 p-5 relative overflow-hidden fade-up sm:col-span-2 lg:col-span-1">
+      <div class="flex items-center gap-2 text-stone-500 text-[11px] font-medium uppercase tracking-wider">
+        <i class="fa-solid fa-users text-[10px]"></i>
+        Total customers
+      </div>
+      <div id="totalCustomers" class="mt-2 text-2xl font-bold text-stone-900">
+        <span class="skeleton inline-block w-20 h-7"></span>
+      </div>
+      <p class="mt-1.5 text-[11px] text-stone-500">Registered in the system</p>
+    </div>
+  </section>
+
+  <!-- ===== Quick actions ===== -->
+  <section class="mb-6 fade-up">
+    <h2 class="text-sm font-bold text-stone-900 tracking-tight mb-3">Quick actions</h2>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+
+      <a href="deposit.html"
+         class="group flex flex-col p-4 bg-white border border-stone-200 rounded-xl shadow-sm hover:border-brand-gold hover:shadow transition-all active:scale-[0.98]">
+        <div class="flex items-center gap-1.5 text-brand-gold font-semibold text-[11px] uppercase tracking-wide mb-1">
+          <i class="fa-solid fa-plus"></i> Deposit
+        </div>
+        <span class="text-[13px] font-bold text-stone-800 group-hover:text-stone-900">Record Deposit</span>
+      </a>
+
+      <a href="withdraw.html"
+         class="group flex flex-col p-4 bg-white border border-stone-200 rounded-xl shadow-sm hover:border-brand-gold hover:shadow transition-all active:scale-[0.98]">
+        <div class="flex items-center gap-1.5 text-brand-gold font-semibold text-[11px] uppercase tracking-wide mb-1">
+          <i class="fa-solid fa-minus"></i> Withdraw
+        </div>
+        <span class="text-[13px] font-bold text-stone-800 group-hover:text-stone-900">Process Withdrawal</span>
+      </a>
+
+      <a href="customers.html"
+         class="group flex flex-col p-4 bg-white border border-stone-200 rounded-xl shadow-sm hover:border-brand-gold hover:shadow transition-all active:scale-[0.98]">
+        <div class="flex items-center gap-1.5 text-brand-gold font-semibold text-[11px] uppercase tracking-wide mb-1">
+          <i class="fa-solid fa-magnifying-glass"></i> Find
+        </div>
+        <span class="text-[13px] font-bold text-stone-800 group-hover:text-stone-900">Find Customer</span>
+      </a>
+
+      <a href="register-customer.html"
+         class="group flex flex-col p-4 bg-white border border-stone-200 rounded-xl shadow-sm hover:border-brand-gold hover:shadow transition-all active:scale-[0.98]">
+        <div class="flex items-center gap-1.5 text-brand-gold font-semibold text-[11px] uppercase tracking-wide mb-1">
+          <i class="fa-solid fa-user-plus"></i> Register
+        </div>
+        <span class="text-[13px] font-bold text-stone-800 group-hover:text-stone-900">Register Customer</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ===== Recent transactions + All-time totals ===== -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6 fade-up">
+
+    <!-- Recent transactions -->
+    <div class="lg:col-span-2">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-bold text-stone-900 tracking-tight">Recent transactions</h2>
+        <a href="transactions.html" class="text-[11px] font-semibold text-brand-gold hover:text-brand-gold-dark">
+          View all <i class="fa-solid fa-arrow-right text-[9px] ml-0.5"></i>
+        </a>
+      </div>
+      <div id="recentTx" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+        <!-- skeleton rows -->
+        <div class="p-4 flex items-center justify-between">
+          <div class="space-y-2 flex-1">
+            <div class="skeleton h-3.5 w-32"></div>
+            <div class="skeleton h-2.5 w-20"></div>
+          </div>
+          <div class="skeleton h-3.5 w-20"></div>
+        </div>
+        <div class="p-4 flex items-center justify-between">
+          <div class="space-y-2 flex-1">
+            <div class="skeleton h-3.5 w-28"></div>
+            <div class="skeleton h-2.5 w-24"></div>
+          </div>
+          <div class="skeleton h-3.5 w-20"></div>
+        </div>
+        <div class="p-4 flex items-center justify-between">
+          <div class="space-y-2 flex-1">
+            <div class="skeleton h-3.5 w-36"></div>
+            <div class="skeleton h-2.5 w-16"></div>
+          </div>
+          <div class="skeleton h-3.5 w-20"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All-time totals -->
+    <div>
+      <h2 class="text-sm font-bold text-stone-900 tracking-tight mb-3">All-time totals</h2>
+      <div class="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-[12px] text-stone-500">
+            <i class="fa-solid fa-arrow-down-to-line text-emerald-600 text-[10px]"></i>
+            Total deposits
+          </div>
+          <div id="totalDeposits" class="text-[13px] font-bold text-stone-900 text-right">
+            <span class="skeleton inline-block w-24 h-4"></span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-[12px] text-stone-500">
+            <i class="fa-solid fa-arrow-up-from-bracket text-red-600 text-[10px]"></i>
+            Total withdrawals
+          </div>
+          <div id="totalWithdrawals" class="text-[13px] font-bold text-stone-900 text-right">
+            <span class="skeleton inline-block w-24 h-4"></span>
+          </div>
+        </div>
+        <div class="pt-3 border-t border-stone-100 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-[12px] font-semibold text-stone-700">
+            <i class="fa-solid fa-vault text-brand-gold text-[10px]"></i>
+            Net savings
+          </div>
+          <div id="netSavings" class="text-[14px] font-bold text-brand-gold text-right">
+            <span class="skeleton inline-block w-24 h-4"></span>
+          </div>
+        </div>
+        <p id="lastUpdated" class="text-[10.5px] text-stone-400 text-center pt-2 border-t border-stone-100">
+          <i class="fa-regular fa-clock mr-1"></i> Loading…
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ======================= SCRIPT ======================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  getFirestore,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  getDoc,
+  doc,
+  Timestamp,
+  getCountFromServer,
+  getAggregateFromServer,
+  sum
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+/* ---------- Notifications component ---------- */
+import { subscribeUnreadCount } from './components/notifications.js';
+
+/* ---------- Bottom nav component ---------- */
+import { mountBottomNav } from './components/bottom-nav.js';
+mountBottomNav('home');
+
+/* ---------- Notification badge ---------- */
+const bellBadge = document.getElementById('bellBadge');
+subscribeUnreadCount((count) => {
+  if (count > 0) {
+    bellBadge.textContent = count > 99 ? '99+' : String(count);
+    bellBadge.classList.remove('hidden');
+  } else {
+    bellBadge.classList.add('hidden');
+  }
+});
+
+/* ---------- Firebase ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
+  authDomain: "area-supa-ventures.firebaseapp.com",
+  projectId: "area-supa-ventures",
+  storageBucket: "area-supa-ventures.firebasestorage.app",
+  messagingSenderId: "339989502774",
+  appId: "1:339989502774:web:6cbf99587d4317af0a7197",
+  measurementId: "G-WDJCSK78QE"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* Firestore with offline persistence (falls back to plain instance if unavailable) */
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+} catch (e) {
+  console.warn('Persistent cache not available, using default Firestore:', e);
+  db = getFirestore(app);
+}
+
+/* ---------- Refs ---------- */
+const $ = (id) => document.getElementById(id);
+
+const greetingText          = $('greetingText');
+const greetingWave          = $('greetingWave');
+const todayDateText         = $('todayDateText');
+const todayDepositsAmount   = $('todayDepositsAmount');
+const todayDepositsSub      = $('todayDepositsSub');
+const todayWithdrawalsAmount= $('todayWithdrawalsAmount');
+const todayWithdrawalsSub   = $('todayWithdrawalsSub');
+const totalCustomersEl      = $('totalCustomers');
+const recentTxEl            = $('recentTx');
+const totalDepositsEl       = $('totalDeposits');
+const totalWithdrawalsEl    = $('totalWithdrawals');
+const netSavingsEl          = $('netSavings');
+const lastUpdatedEl         = $('lastUpdated');
+const syncStatusEl          = $('syncStatus');
+
+const loadError             = $('loadError');
+const loadErrorMsg          = $('loadErrorMsg');
+const retryBtn              = $('retryBtn');
+const refreshBtn            = $('refreshBtn');
+const logoutBtn             = $('logoutBtn');
+
+/* ---------- Helpers ---------- */
+function formatGHS(n) {
+  const v = Number(n) || 0;
+  return v.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function tsToDate(v) {
+  if (!v) return null;
+  if (v.toDate) return v.toDate();
+  if (v instanceof Date) return v;
+  return new Date(v);
+}
+function greetingForNow() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+function firstNameFrom(full) {
+  if (!full) return 'Collector';
+  return String(full).trim().split(/\s+/)[0];
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function setSyncStatus(state) {
+  const map = {
+    synced:  { cls: 'bg-emerald-50 border-emerald-200 text-emerald-700', dot: 'bg-emerald-500 animate-pulse', label: 'Synced' },
+    syncing: { cls: 'bg-amber-50 border-amber-200 text-amber-700',       dot: 'bg-amber-500 animate-pulse',  label: 'Syncing' },
+    offline: { cls: 'bg-stone-100 border-stone-200 text-stone-600',      dot: 'bg-stone-400',                 label: 'Offline' },
+    error:   { cls: 'bg-red-50 border-red-200 text-red-700',             dot: 'bg-red-500',                   label: 'Error' }
+  };
+  const c = map[state] || map.offline;
+  syncStatusEl.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${c.cls}`;
+  syncStatusEl.innerHTML =
+    `<span class="w-1.5 h-1.5 rounded-full ${c.dot}"></span>
+     <span class="text-[11px] font-semibold">${c.label}</span>`;
+}
+
+function showError(msg) {
+  loadErrorMsg.textContent = msg || 'Check your internet connection and try again.';
+  loadError.classList.remove('hidden');
+  setSyncStatus(navigator.onLine ? 'error' : 'offline');
+}
+function hideError() { loadError.classList.add('hidden'); }
+
+/* ---------- Local cache for aggregates (so offline still shows values) ---------- */
+const CACHE_KEY = 'asv.dashboard.totals.v1';
+function readTotalsCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }
+  catch { return null; }
+}
+function writeTotalsCache(data) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+}
+
+/* ---------- Greeting & date rendering ---------- */
+function renderDate() {
+  todayDateText.classList.remove('skeleton');
+  todayDateText.classList.remove('inline-block', 'w-40', 'h-3', 'align-middle');
+  todayDateText.classList.add('inline');
+  todayDateText.textContent = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+function setGreeting(text) {
+  greetingText.classList.remove('skeleton');
+  greetingText.classList.remove('inline-block', 'w-56', 'h-8', 'align-middle');
+  greetingText.classList.add('inline');
+
+  // Highlight the name after the first comma in brand gold
+  const commaIdx = text.indexOf(', ');
+  if (commaIdx !== -1) {
+    const before = text.slice(0, commaIdx + 2);
+    const name   = text.slice(commaIdx + 2);
+    greetingText.innerHTML =
+      `${escapeHtml(before)}<span class="text-brand-gold">${escapeHtml(name)}</span>`;
+  } else {
+    greetingText.textContent = text;
+  }
+}
+
+/* ---------- Rendering ---------- */
+function renderTodayStats({ deposits, withdrawals, depositCustomers, withdrawalCount }) {
+  const depParts = formatGHS(deposits).split('.');
+  todayDepositsAmount.innerHTML =
+    `<span class="text-brand-gold text-base">GH₵</span>${depParts[0]}` +
+    `<span class="text-sm text-stone-400">.${depParts[1]}</span>`;
+  todayDepositsSub.textContent =
+    depositCustomers === 0 ? 'No deposits yet' :
+    `${depositCustomers} customer${depositCustomers === 1 ? '' : 's'} served`;
+
+  const wdParts = formatGHS(withdrawals).split('.');
+  todayWithdrawalsAmount.innerHTML =
+    `<span class="text-brand-gold text-base">GH₵</span>${wdParts[0]}` +
+    `<span class="text-sm text-stone-400">.${wdParts[1]}</span>`;
+  todayWithdrawalsSub.textContent =
+    withdrawalCount === 0 ? 'No withdrawals today' :
+    `${withdrawalCount} transaction${withdrawalCount === 1 ? '' : 's'}`;
+}
+
+function renderRecentTransactions(items) {
+  if (!items.length) {
+    recentTxEl.innerHTML = `
+      <div class="p-8 text-center">
+        <i class="fa-solid fa-receipt text-2xl text-stone-300"></i>
+        <p class="mt-2 text-sm font-semibold text-stone-700">No transactions yet</p>
+        <p class="text-xs text-stone-500 mt-0.5">Record your first deposit to see it here.</p>
+      </div>`;
+    return;
+  }
+
+  recentTxEl.innerHTML = items.map((t) => {
+    const isDeposit = t.type === 'deposit';
+    const sign      = isDeposit ? '+' : '−';
+    const color     = isDeposit ? 'text-[#1B7F4B]' : 'text-[#B93838]';
+    const label     = isDeposit ? 'Deposit' : 'Withdrawal';
+    const when      = tsToDate(t.createdAt);
+    const whenStr   = when
+      ? when.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) +
+        ' · ' +
+        when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+      : '';
+    const name      = t.customerName || t.accountNumber || 'Customer';
+
+    return `
+      <div class="p-3.5 flex items-center justify-between hover:bg-stone-50/70 transition-colors">
+        <div class="min-w-0 flex-1 pr-3">
+          <p class="text-[13px] font-bold text-stone-900 truncate">${escapeHtml(name)}</p>
+          <p class="text-[11px] text-stone-400 truncate">
+            ${label}${whenStr ? ' · ' + whenStr : ''}
+          </p>
+        </div>
+        <span class="text-[13px] font-bold ${color} whitespace-nowrap">
+          ${sign}GH₵${formatGHS(t.amount)}
+        </span>
+      </div>`;
+  }).join('');
+}
+
+function renderAllTime({ deposits, withdrawals, customers }, { fromCache } = {}) {
+  totalDepositsEl.innerHTML    = `GH₵ ${formatGHS(deposits)}`;
+  totalWithdrawalsEl.innerHTML = `GH₵ ${formatGHS(withdrawals)}`;
+  netSavingsEl.innerHTML       = `GH₵ ${formatGHS(deposits - withdrawals)}`;
+  totalCustomersEl.textContent = Number(customers || 0).toLocaleString('en-GH');
+
+  const now = new Date();
+  lastUpdatedEl.innerHTML =
+    `<i class="fa-regular fa-clock mr-1"></i> Updated ${now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}${fromCache ? ' · offline' : ''}`;
+}
+
+/* ---------- Data loading ---------- */
+let currentUser = null;
+
+async function loadDashboard() {
+  hideError();
+  setSyncStatus(navigator.onLine ? 'syncing' : 'offline');
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayStartTs = Timestamp.fromDate(todayStart);
+
+  /* --- 1. Date (renders instantly) --- */
+  renderDate();
+
+  /* --- 2. Greeting: user first name from Firestore --- */
+  try {
+    if (currentUser) {
+      const snap = await getDoc(doc(db, 'users', currentUser.uid));
+      const nm   = snap.exists() ? snap.data().name : null;
+      setGreeting(`${greetingForNow()}, ${firstNameFrom(nm)}`);
+      greetingWave.classList.remove('hidden');
+    } else {
+      setGreeting(greetingForNow());
+    }
+  } catch (e) {
+    console.warn('Could not load user profile:', e);
+    setGreeting(greetingForNow());
+  }
+
+  /* --- 3. Today's transactions (single field index only) --- */
+  let todayDocs = [];
+  try {
+    const q = query(
+      collection(db, 'transactions'),
+      where('createdAt', '>=', todayStartTs),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    todayDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.error('Failed to load today’s transactions:', e);
+    const cached = readTotalsCache();
+    if (cached) {
+      renderTodayStats({
+        deposits: cached.todayDeposits || 0,
+        withdrawals: cached.todayWithdrawals || 0,
+        depositCustomers: cached.todayDepositCustomers || 0,
+        withdrawalCount: cached.todayWithdrawalCount || 0
+      });
+    }
+    showError('We couldn’t reach the server. Showing what we have cached. Check your connection and retry.');
+    setSyncStatus('offline');
+    return;
+  }
+
+  /* --- 4. Compute today's numbers client-side --- */
+  let todayDeposits = 0;
+  let todayWithdrawals = 0;
+  let todayWithdrawalCount = 0;
+  const uniqueDepositCustomers = new Set();
+
+  for (const t of todayDocs) {
+    const amt = Number(t.amount) || 0;
+    if (t.type === 'deposit') {
+      todayDeposits += amt;
+      if (t.customerId) uniqueDepositCustomers.add(t.customerId);
+    } else if (t.type === 'withdrawal') {
+      todayWithdrawals += amt;
+      todayWithdrawalCount++;
+    }
+  }
+
+  renderTodayStats({
+    deposits: todayDeposits,
+    withdrawals: todayWithdrawals,
+    depositCustomers: uniqueDepositCustomers.size,
+    withdrawalCount: todayWithdrawalCount
+  });
+
+  /* --- 5. Recent 5 transactions --- */
+  try {
+    const q = query(
+      collection(db, 'transactions'),
+      orderBy('createdAt', 'desc'),
+      limit(5)
+    );
+    const snap = await getDocs(q);
+    renderRecentTransactions(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  } catch (e) {
+    console.error('Failed to load recent transactions:', e);
+    renderRecentTransactions([]);
+  }
+
+  /* --- 6. All-time aggregates + customers count (graceful offline fallback) --- */
+  const cache = readTotalsCache() || { deposits: 0, withdrawals: 0, customers: 0 };
+
+  async function tryDeposits() {
+    try {
+      const r = await getAggregateFromServer(
+        query(collection(db, 'transactions'), where('type', '==', 'deposit')),
+        { total: sum('amount') }
+      );
+      return Number(r.data().total) || 0;
+    } catch (e) {
+      console.warn('Deposits aggregate failed, using cache:', e);
+      return cache.deposits || 0;
+    }
+  }
+  async function tryWithdrawals() {
+    try {
+      const r = await getAggregateFromServer(
+        query(collection(db, 'transactions'), where('type', '==', 'withdrawal')),
+        { total: sum('amount') }
+      );
+      return Number(r.data().total) || 0;
+    } catch (e) {
+      console.warn('Withdrawals aggregate failed, using cache:', e);
+      return cache.withdrawals || 0;
+    }
+  }
+  async function tryCustomers() {
+    try {
+      const r = await getCountFromServer(collection(db, 'customers'));
+      return Number(r.data().count) || 0;
+    } catch (e) {
+      console.warn('Customer count failed, using cache:', e);
+      return cache.customers || 0;
+    }
+  }
+
+  const [allDeposits, allWithdrawals, allCustomers] = await Promise.all([
+    tryDeposits(), tryWithdrawals(), tryCustomers()
+  ]);
+
+  renderAllTime({
+    deposits: allDeposits,
+    withdrawals: allWithdrawals,
+    customers: allCustomers
+  }, { fromCache: !navigator.onLine });
+
+  writeTotalsCache({
+    deposits: allDeposits,
+    withdrawals: allWithdrawals,
+    customers: allCustomers,
+    todayDeposits,
+    todayWithdrawals,
+    todayDepositCustomers: uniqueDepositCustomers.size,
+    todayWithdrawalCount,
+    savedAt: Date.now()
+  });
+
+  setSyncStatus(navigator.onLine ? 'synced' : 'offline');
+}
+
+/* ---------- Network events ---------- */
+window.addEventListener('online', () => {
+  setSyncStatus('syncing');
+  loadDashboard();
+});
+window.addEventListener('offline', () => {
+  setSyncStatus('offline');
+});
+
+/* ---------- Auth guard ---------- */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.replace('index.html');
+    return;
+  }
+  currentUser = user;
+  await loadDashboard();
+});
+
+/* ---------- Buttons ---------- */
+refreshBtn.addEventListener('click', () => {
+  refreshBtn.querySelector('i').classList.add('fa-spin');
+  loadDashboard().finally(() => {
+    setTimeout(() => refreshBtn.querySelector('i').classList.remove('fa-spin'), 400);
+  });
+});
+retryBtn.addEventListener('click', () => loadDashboard());
+logoutBtn.addEventListener('click', async () => {
+  await signOut(auth);
+  window.location.replace('index.html');
+});
+</script>
+
+</body>
+</html>

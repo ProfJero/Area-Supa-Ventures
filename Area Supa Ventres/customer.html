@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Customer — Area Supa Ventures</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      'brand-gold': '#C59A3F', 'brand-gold-dark': '#B08632',
+      'brand-charcoal': '#212121', 'brand-bg': '#F8F6F2',
+      'brand-success': '#1B7F4B', 'brand-danger': '#B93838',
+    },
+    fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] },
+  }},
+};
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { user-select: none; background: #F8F6F2; }
+  input, button, a { user-select: auto; }
+  ::-webkit-scrollbar { display: none; } * { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .skeleton {
+    background: linear-gradient(90deg,#e7e5e4 0%,#f5f4f2 50%,#e7e5e4 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+  }
+  .skeleton-dark {
+    background: linear-gradient(90deg,#2b2a27 0%,#3a3833 50%,#2b2a27 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+
+  .fade-up { animation: fadeUp 400ms ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen">
+
+<!-- ================= HEADER ================= -->
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="customers.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 id="headerName" class="text-[15px] font-bold text-stone-900 truncate">
+          <span class="skeleton inline-block w-32 h-4 align-middle"></span>
+        </h1>
+        <p id="headerAcct" class="text-[11px] text-stone-500 font-mono truncate">
+          <span class="skeleton inline-block w-24 h-3 align-middle"></span>
+        </p>
+      </div>
+    </div>
+    <div class="flex items-center gap-1">
+      <button id="copyAcctBtn" type="button" aria-label="Copy account number"
+              class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-regular fa-copy text-[14px]"></i>
+      </button>
+      <button id="editBtn" type="button" aria-label="Edit customer"
+              class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-pen text-[13px]"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= MAIN ================= -->
+<main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-24">
+
+  <!-- Error banner -->
+  <div id="loadError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+    <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-red-800">Couldn’t load this customer</p>
+      <p id="loadErrorMsg" class="text-[12px] text-red-700 mt-0.5">Check your connection and retry.</p>
+      <button id="retryBtn" type="button"
+              class="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-800 hover:text-red-900 underline underline-offset-2">
+        <i class="fa-solid fa-rotate-right text-[11px]"></i> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- Welcome banner (after registration) -->
+  <div id="welcomeBanner" class="hidden mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-start gap-3">
+    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5"></i>
+    <div>
+      <p class="text-sm font-semibold text-emerald-800">Customer registered</p>
+      <p class="text-[12px] text-emerald-700 mt-0.5">You can now record their first deposit.</p>
+    </div>
+  </div>
+
+  <!-- Profile card -->
+  <section class="rounded-3xl bg-[#20201E] text-white p-5 mb-5 relative overflow-hidden fade-up">
+    <div class="absolute -right-8 -top-8 w-32 h-32 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative flex items-center gap-4">
+      <div id="avatar" class="w-14 h-14 rounded-full bg-brand-gold flex items-center justify-center text-[#1A1A18] font-bold text-lg shrink-0">
+        <span class="skeleton-dark w-8 h-4 inline-block"></span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 id="customerName" class="text-lg font-bold text-white truncate">
+          <span class="skeleton-dark inline-block w-40 h-5"></span>
+        </h2>
+        <div class="flex items-center gap-1.5 text-xs text-stone-300 mt-0.5">
+          <span id="customerAcct" class="font-medium text-stone-200 font-mono">
+            <span class="skeleton-dark inline-block w-20 h-3"></span>
+          </span>
+          <span class="text-stone-500 font-bold">•</span>
+          <span id="customerStatus" class="text-emerald-400 font-medium text-[11px] uppercase tracking-wide">
+            <span class="skeleton-dark inline-block w-12 h-3"></span>
+          </span>
+        </div>
+        <p id="customerPhone" class="text-xs text-stone-400 mt-0.5">
+          <span class="skeleton-dark inline-block w-28 h-3"></span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Balance -->
+  <section class="px-1 mb-5 fade-up">
+    <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold">Current savings balance</p>
+    <p id="balance" class="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight mt-1.5">
+      <span class="skeleton inline-block w-40 h-9 align-middle"></span>
+    </p>
+  </section>
+
+  <!-- Primary actions -->
+  <section class="grid grid-cols-2 gap-3 mb-3 fade-up">
+    <a id="depositBtn" href="#"
+       class="w-full py-3.5 bg-[#212121] hover:bg-black active:scale-[0.98] transition-all text-white font-semibold text-sm rounded-xl shadow text-center inline-flex items-center justify-center gap-2">
+      <i class="fa-solid fa-plus text-[12px]"></i> Deposit
+    </a>
+    <a id="withdrawBtn" href="#"
+       class="w-full py-3.5 bg-white border border-stone-300 hover:bg-stone-50 active:scale-[0.98] transition-all text-stone-900 font-semibold text-sm rounded-xl shadow-sm text-center inline-flex items-center justify-center gap-2">
+      <i class="fa-solid fa-minus text-[12px]"></i> Withdraw
+    </a>
+  </section>
+
+  <!-- Secondary actions -->
+  <section class="grid grid-cols-3 gap-2 mb-6 fade-up">
+    <a id="statementBtn" href="#"
+       class="w-full py-2.5 bg-white border border-stone-200 hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-stone-700 text-[12px] font-semibold rounded-lg inline-flex items-center justify-center gap-1.5">
+      <i class="fa-solid fa-file-invoice text-brand-gold text-[11px]"></i> Statement
+    </a>
+    <a id="callBtn" href="#"
+       class="w-full py-2.5 bg-white border border-stone-200 hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-stone-700 text-[12px] font-semibold rounded-lg inline-flex items-center justify-center gap-1.5">
+      <i class="fa-solid fa-phone text-brand-gold text-[11px]"></i> Call
+    </a>
+    <button id="copyAcctBtn2" type="button"
+       class="w-full py-2.5 bg-white border border-stone-200 hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-stone-700 text-[12px] font-semibold rounded-lg inline-flex items-center justify-center gap-1.5">
+      <i class="fa-regular fa-copy text-brand-gold text-[11px]"></i> <span id="copyAcctLabel">Copy</span>
+    </button>
+  </section>
+
+  <!-- Summary -->
+  <section class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 mb-6 fade-up">
+    <div class="flex items-center justify-between p-4">
+      <span class="text-[12.5px] text-stone-500 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-down-to-line text-emerald-600 text-[11px]"></i> Total deposits
+      </span>
+      <span id="totalDeposits" class="text-[13px] font-bold text-stone-900">
+        <span class="skeleton inline-block w-24 h-4 align-middle"></span>
+      </span>
+    </div>
+    <div class="flex items-center justify-between p-4">
+      <span class="text-[12.5px] text-stone-500 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-up-from-bracket text-red-600 text-[11px]"></i> Total withdrawals
+      </span>
+      <span id="totalWithdrawals" class="text-[13px] font-bold text-stone-900">
+        <span class="skeleton inline-block w-24 h-4 align-middle"></span>
+      </span>
+    </div>
+    <div class="flex items-center justify-between p-4">
+      <span class="text-[12.5px] text-stone-500 flex items-center gap-2">
+        <i class="fa-regular fa-calendar text-stone-400 text-[11px]"></i> Registered
+      </span>
+      <span id="registeredAt" class="text-[12.5px] font-semibold text-stone-900">
+        <span class="skeleton inline-block w-24 h-4 align-middle"></span>
+      </span>
+    </div>
+  </section>
+
+  <!-- Contact details -->
+  <section class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 mb-6 fade-up">
+    <div class="px-4 py-3">
+      <p class="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-stone-400">Contact details</p>
+    </div>
+    <div class="flex items-start justify-between gap-3 p-4">
+      <span class="text-[12.5px] text-stone-500">Email</span>
+      <span id="detailEmail" class="text-[12.5px] font-semibold text-stone-900 text-right break-all">—</span>
+    </div>
+    <div class="flex items-start justify-between gap-3 p-4">
+      <span class="text-[12.5px] text-stone-500">Digital address</span>
+      <span id="detailDigital" class="text-[12.5px] font-semibold text-stone-900 text-right">—</span>
+    </div>
+    <div class="flex items-start justify-between gap-3 p-4">
+      <span class="text-[12.5px] text-stone-500">Next of kin</span>
+      <span id="detailNok" class="text-[12.5px] font-semibold text-stone-900 text-right">—</span>
+    </div>
+    <div class="flex items-start justify-between gap-3 p-4">
+      <span class="text-[12.5px] text-stone-500">Next of kin phone</span>
+      <span id="detailNokPhone" class="text-[12.5px] font-semibold text-stone-900 text-right">—</span>
+    </div>
+    <div id="notesRow" class="p-4 hidden">
+      <p class="text-[12.5px] text-stone-500 mb-1">Notes</p>
+      <p id="detailNotes" class="text-[12.5px] text-stone-800 whitespace-pre-wrap"></p>
+    </div>
+  </section>
+
+  <!-- Recent transactions -->
+  <section class="fade-up">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-bold text-stone-900 tracking-tight">Recent transactions</h2>
+      <a id="viewAllTx" href="#" class="text-[11px] font-semibold text-brand-gold hover:text-brand-gold-dark">
+        View all <i class="fa-solid fa-arrow-right text-[9px] ml-0.5"></i>
+      </a>
+    </div>
+    <div id="recentTxList" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+      <div class="p-4 flex items-center justify-between">
+        <div class="space-y-2 flex-1">
+          <div class="skeleton h-3.5 w-32"></div>
+          <div class="skeleton h-2.5 w-24"></div>
+        </div>
+        <div class="skeleton h-3.5 w-20"></div>
+      </div>
+      <div class="p-4 flex items-center justify-between">
+        <div class="space-y-2 flex-1">
+          <div class="skeleton h-3.5 w-28"></div>
+          <div class="skeleton h-2.5 w-20"></div>
+        </div>
+        <div class="skeleton h-3.5 w-20"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= SCRIPT ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore,
+  collection, query, where, orderBy, limit, getDocs, getDoc, doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { mountBottomNav } from './components/bottom-nav.js';
+mountBottomNav('customers');
+
+/* ---------- Firebase ---------- */
+const app = initializeApp({
+  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
+  authDomain: "area-supa-ventures.firebaseapp.com",
+  projectId: "area-supa-ventures",
+  storageBucket: "area-supa-ventures.firebasestorage.app",
+  messagingSenderId: "339989502774",
+  appId: "1:339989502774:web:6cbf99587d4317af0a7197"
+});
+const auth = getAuth(app);
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch { db = getFirestore(app); }
+
+/* ---------- Refs ---------- */
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const customerId = params.get('id');
+const isWelcome = params.get('welcome') === '1';
+
+if (!customerId) window.location.replace('customers.html');
+
+const loadError = $('loadError'), loadErrorMsg = $('loadErrorMsg'), retryBtn = $('retryBtn');
+const welcomeBanner = $('welcomeBanner');
+const headerName = $('headerName'), headerAcct = $('headerAcct');
+const avatar = $('avatar'), customerName = $('customerName'), customerAcct = $('customerAcct');
+const customerStatus = $('customerStatus'), customerPhone = $('customerPhone');
+const balanceEl = $('balance');
+const depositBtn = $('depositBtn'), withdrawBtn = $('withdrawBtn');
+const statementBtn = $('statementBtn'), callBtn = $('callBtn'), copyAcctBtn2 = $('copyAcctBtn2');
+const copyAcctLabel = $('copyAcctLabel');
+const totalDepositsEl = $('totalDeposits'), totalWithdrawalsEl = $('totalWithdrawals'), registeredAtEl = $('registeredAt');
+const detailEmail = $('detailEmail'), detailDigital = $('detailDigital');
+const detailNok = $('detailNok'), detailNokPhone = $('detailNokPhone');
+const notesRow = $('notesRow'), detailNotes = $('detailNotes');
+const recentTxList = $('recentTxList'), viewAllTx = $('viewAllTx');
+const copyAcctBtn = $('copyAcctBtn'), editBtn = $('editBtn');
+
+/* ---------- Helpers ---------- */
+function formatGHS(n) { const v = Number(n) || 0; return v.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function initialsFrom(name) {
+  if (!name) return '??';
+  const p = String(name).trim().split(/\s+/);
+  return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '??';
+}
+function tsToDate(v) { if (!v) return null; if (v.toDate) return v.toDate(); if (v instanceof Date) return v; return new Date(v); }
+function dash(v) { return v && String(v).trim() ? escapeHtml(v) : '<span class="text-stone-400 font-normal">—</span>'; }
+
+function showError(msg) { loadErrorMsg.textContent = msg || 'Check your connection and retry.'; loadError.classList.remove('hidden'); }
+function hideError() { loadError.classList.add('hidden'); }
+
+/* ---------- Copy account number ---------- */
+let copyResetTimer = null;
+
+async function copyAccountNumber(showLabel = false) {
+  const acct = currentCustomer?.accountNumber;
+  if (!acct) return;
+  try {
+    await navigator.clipboard.writeText(acct);
+  } catch {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = acct; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch {}
+    ta.remove();
+  }
+
+  // Visual confirmation
+  if (showLabel && copyAcctLabel) {
+    copyAcctLabel.textContent = 'Copied';
+    clearTimeout(copyResetTimer);
+    copyResetTimer = setTimeout(() => { copyAcctLabel.textContent = 'Copy'; }, 1500);
+  } else {
+    const old = copyAcctBtn.innerHTML;
+    copyAcctBtn.innerHTML = '<i class="fa-solid fa-check text-[14px] text-emerald-600"></i>';
+    setTimeout(() => { copyAcctBtn.innerHTML = old; }, 1400);
+  }
+}
+
+copyAcctBtn.addEventListener('click', () => copyAccountNumber(false));
+copyAcctBtn2.addEventListener('click', () => copyAccountNumber(true));
+
+/* ---------- Edit (placeholder) ---------- */
+editBtn.addEventListener('click', () => {
+  if (!customerId) return;
+  window.location.href = `edit-customer.html?id=${encodeURIComponent(customerId)}`;
+});
+
+/* ---------- Load ---------- */
+let currentCustomer = null;
+
+async function load() {
+  hideError();
+  try {
+    const snap = await getDoc(doc(db, 'customers', customerId));
+    if (!snap.exists()) {
+      showError('This customer could not be found. They may have been removed.');
+      return;
+    }
+    currentCustomer = { id: snap.id, ...snap.data() };
+    renderCustomer(currentCustomer);
+    await loadRecentTransactions();
+  } catch (e) {
+    console.error('Customer load failed:', e);
+    if (!navigator.onLine) {
+      showError('You’re offline. Reconnect to load this customer.');
+    } else {
+      showError('Could not reach the server. Check your connection and retry.');
+    }
+  }
+}
+
+function renderCustomer(c) {
+  const name = c.fullName || 'Unnamed';
+  const acct = c.accountNumber || '—';
+  const status = c.status || 'active';
+
+  // Header
+  headerName.textContent = name;
+  headerAcct.textContent = acct;
+
+  // Profile card
+  avatar.textContent = initialsFrom(name);
+  customerName.textContent = name;
+  customerAcct.textContent = acct;
+  customerStatus.textContent = status;
+  customerStatus.className = status === 'active'
+    ? 'text-emerald-400 font-medium text-[11px] uppercase tracking-wide'
+    : 'text-stone-400 font-medium text-[11px] uppercase tracking-wide';
+  customerPhone.textContent = c.phone || '—';
+
+  // Balance
+  balanceEl.innerHTML = `GH₵${formatGHS(c.balance)}`;
+
+  // Primary links
+  depositBtn.href = `deposit.html?customerId=${encodeURIComponent(c.id)}`;
+  withdrawBtn.href = `withdraw.html?customerId=${encodeURIComponent(c.id)}`;
+
+  // Secondary links
+  statementBtn.href = `statement.html?id=${encodeURIComponent(c.id)}`;
+  callBtn.href = c.phone ? `tel:${String(c.phone).replace(/[^\d+]/g, '')}` : '#';
+  if (!c.phone) {
+    callBtn.classList.add('opacity-40', 'pointer-events-none');
+    callBtn.setAttribute('aria-disabled', 'true');
+  }
+
+  // View all transactions
+  viewAllTx.href = `transactions.html?customerId=${encodeURIComponent(c.id)}`;
+
+  // Summary
+  totalDepositsEl.textContent = `GH₵${formatGHS(c.totalDeposits)}`;
+  totalWithdrawalsEl.textContent = `GH₵${formatGHS(c.totalWithdrawals)}`;
+  const reg = tsToDate(c.createdAt);
+  registeredAtEl.textContent = reg
+    ? reg.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+
+  // Contact details
+  detailEmail.innerHTML = dash(c.email);
+  detailDigital.innerHTML = dash(c.digitalAddress);
+  detailNok.innerHTML = dash(c.nextOfKin);
+  detailNokPhone.innerHTML = dash(c.nextOfKinPhone);
+
+  if (c.notes && String(c.notes).trim()) {
+    notesRow.classList.remove('hidden');
+    detailNotes.textContent = c.notes;
+  } else {
+    notesRow.classList.add('hidden');
+  }
+
+  // Welcome banner
+  if (isWelcome) welcomeBanner.classList.remove('hidden');
+}
+
+async function loadRecentTransactions() {
+  try {
+    const q = query(
+      collection(db, 'transactions'),
+      where('customerId', '==', customerId),
+      orderBy('createdAt', 'desc'),
+      limit(5)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (!items.length) {
+      recentTxList.innerHTML = `
+        <div class="p-8 text-center">
+          <i class="fa-solid fa-receipt text-2xl text-stone-300"></i>
+          <p class="mt-2 text-sm font-semibold text-stone-700">No transactions yet</p>
+          <p class="text-xs text-stone-500 mt-0.5">Record their first deposit to see it here.</p>
+        </div>`;
+      return;
+    }
+
+    recentTxList.innerHTML = items.map(t => {
+      const isDep = t.type === 'deposit';
+      const sign = isDep ? '+' : '−';
+      const color = isDep ? 'text-[#1B7F4B]' : 'text-[#B93838]';
+      const label = isDep ? 'Deposit' : 'Withdrawal';
+      const when = tsToDate(t.createdAt);
+      const whenStr = when
+        ? when.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) +
+          ' · ' +
+          when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+        : '';
+      return `
+        <div class="p-3.5 flex items-center justify-between hover:bg-stone-50/70 transition-colors">
+          <div class="min-w-0 flex-1 pr-3">
+            <p class="text-[13px] font-bold text-stone-900">${label}</p>
+            <p class="text-[11px] text-stone-400 truncate">${whenStr}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-[13px] font-bold ${color} whitespace-nowrap">${sign}GH₵${formatGHS(t.amount)}</p>
+            <p class="text-[10.5px] text-stone-400 mt-0.5">Bal. GH₵${formatGHS(t.balanceAfter)}</p>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('Recent tx load failed:', e);
+    recentTxList.innerHTML = `
+      <div class="p-6 text-center">
+        <p class="text-sm text-stone-500">Transactions unavailable</p>
+        <p class="text-xs text-stone-400 mt-0.5">Check your connection.</p>
+      </div>`;
+  }
+}
+
+/* ---------- Retry ---------- */
+retryBtn.addEventListener('click', load);
+
+/* ---------- Auth guard ---------- */
+onAuthStateChanged(auth, (u) => {
+  if (!u) { window.location.replace('index.html'); return; }
+  load();
+});
+</script>
+
+</body>
+</html>

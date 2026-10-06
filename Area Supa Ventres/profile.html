@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Profile & Settings — Area Supa Ventures</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      'brand-gold': '#C59A3F', 'brand-gold-dark': '#B08632',
+      'brand-charcoal': '#212121', 'brand-bg': '#F8F6F2',
+      'brand-success': '#1B7F4B', 'brand-danger': '#B93838',
+    },
+    fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] },
+  }},
+};
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { user-select: none; background: #F8F6F2; }
+  input, textarea, button, a { user-select: auto; }
+  ::-webkit-scrollbar { display: none; } * { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .skeleton {
+    background: linear-gradient(90deg,#e7e5e4 0%,#f5f4f2 50%,#e7e5e4 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+  }
+  .skeleton-dark {
+    background: linear-gradient(90deg,#2b2a27 0%,#3a3833 50%,#2b2a27 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+
+  .fade-up { animation: fadeUp 400ms ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .settings-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 16px;
+    background: #fff;
+    cursor: pointer;
+    transition: background-color 150ms;
+    text-align: left;
+    width: 100%;
+  }
+  .settings-row:hover { background: #faf9f6; }
+  .settings-row:not(:last-child) { border-bottom: 1px solid #f1efea; }
+
+  .settings-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  /* iOS-style toggle */
+  .toggle {
+    position: relative; width: 44px; height: 26px;
+    background: #e5e3de; border-radius: 999px;
+    transition: background-color 200ms; flex-shrink: 0; cursor: pointer; border: none;
+  }
+  .toggle:after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 22px; height: 22px; background: #fff;
+    border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transition: transform 200ms;
+  }
+  .toggle[aria-checked="true"] { background: #C59A3F; }
+  .toggle[aria-checked="true"]:after { transform: translateX(18px); }
+
+  .sheet-backdrop {
+    animation: fadeIn 200ms ease both;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .sheet-content { animation: sheetUp 260ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+  @keyframes sheetUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal-center { animation: modalPop 220ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+  @keyframes modalPop { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* Focus ring */
+  .field-input {
+    width: 100%; padding: 11px 14px;
+    background: #FCFCF9; border: 1px solid #E5E1D8; border-radius: 11px;
+    font-size: 14px; font-weight: 500; color: #1c1917;
+    outline: none; transition: border-color 150ms, box-shadow 150ms;
+  }
+  .field-input:focus { border-color: #C59A3F; box-shadow: 0 0 0 1px #C59A3F; }
+  .field-label { display: block; font-size: 12px; font-weight: 500; color: #57534e; margin-bottom: 6px; }
+  .field-error { font-size: 11.5px; color: #b91c1c; margin-top: 5px; display: none; }
+  .field-error.show { display: block; }
+</style>
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen">
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="dashboard.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">Profile &amp; settings</h1>
+        <p class="text-[11px] text-stone-500 truncate">Manage your account and preferences</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN ============ -->
+<main class="max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-24">
+
+  <!-- ============ Profile card ============ -->
+  <section class="rounded-2xl bg-[#20201E] text-white p-5 mb-6 relative overflow-hidden fade-up">
+    <div class="absolute -right-8 -top-8 w-32 h-32 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative flex items-center gap-4">
+      <div id="avatar" class="w-14 h-14 rounded-full bg-brand-gold flex items-center justify-center text-[#1A1A18] font-bold text-lg shrink-0">
+        <span class="skeleton-dark w-8 h-5 inline-block"></span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p id="pName" class="text-[15px] font-bold truncate">
+          <span class="skeleton-dark inline-block w-40 h-4"></span>
+        </p>
+        <p id="pMeta" class="text-[11.5px] text-stone-400 mt-0.5 truncate">
+          <span class="skeleton-dark inline-block w-52 h-3"></span>
+        </p>
+        <div id="pRole" class="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold text-[10.5px] font-semibold uppercase tracking-wide">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-gold"></span>
+          <span id="pRoleText">Loading…</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Account section ============ -->
+  <section class="mb-5 fade-up">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 ml-1 flex items-center gap-2">
+      <i class="fa-solid fa-user-shield text-[10px]"></i>
+      <span>Account</span>
+    </h2>
+    <div class="rounded-2xl border border-stone-200 overflow-hidden">
+
+      <button class="settings-row" id="rowChangePassword" type="button">
+        <div class="settings-icon bg-brand-gold/15 text-brand-gold">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Change password</p>
+          <p class="text-[11px] text-stone-500 mt-0.5 truncate" id="passwordHint">Update your sign-in password</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px]"></i>
+      </button>
+
+      <div class="settings-row" id="rowBiometric">
+        <div class="settings-icon bg-emerald-50 text-emerald-600">
+          <i class="fa-solid fa-fingerprint"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Biometric login</p>
+          <p class="text-[11px] text-stone-500 mt-0.5 truncate" id="biometricHint">
+            Checking availability…
+          </p>
+        </div>
+        <button id="biometricToggle" class="toggle" role="switch" aria-checked="false" aria-label="Toggle biometric login" disabled></button>
+      </div>
+
+      <button class="settings-row" id="rowLanguage" type="button">
+        <div class="settings-icon bg-blue-50 text-blue-600">
+          <i class="fa-solid fa-globe"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Language</p>
+          <p class="text-[11px] text-stone-500 mt-0.5 truncate">Currently: <span id="currentLanguage">English</span></p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px]"></i>
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ============ Data synchronization ============ -->
+  <section class="mb-5 fade-up">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 ml-1 flex items-center gap-2">
+      <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i>
+      <span>Data</span>
+    </h2>
+    <div class="rounded-2xl bg-white border border-stone-200 p-4">
+
+      <!-- Status row -->
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div class="flex items-center gap-2">
+          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-stone-300"></span>
+          <span id="syncLabel" class="text-[13px] font-semibold text-stone-900">Checking…</span>
+        </div>
+        <span id="syncPendingBadge" class="hidden text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"></span>
+      </div>
+
+      <!-- Details -->
+      <div class="space-y-2.5 text-[12px] mb-4">
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-stone-500 flex items-center gap-2">
+            <i class="fa-regular fa-clock text-stone-400 text-[10px]"></i> Last sync
+          </span>
+          <span id="lastSyncTime" class="font-medium text-stone-800 text-right">—</span>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-stone-500 flex items-center gap-2">
+            <i class="fa-solid fa-wifi text-stone-400 text-[10px]"></i> Connection
+          </span>
+          <span id="connectionStatus" class="font-medium text-stone-800 text-right">—</span>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-stone-500 flex items-center gap-2">
+            <i class="fa-solid fa-database text-stone-400 text-[10px]"></i> Local cache
+          </span>
+          <span id="cacheStatus" class="font-medium text-stone-800 text-right">—</span>
+        </div>
+      </div>
+
+      <button id="forceSyncBtn" type="button"
+              class="w-full py-3 bg-[#212121] hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed text-white text-[12.5px] font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+        <i id="forceSyncIcon" class="fa-solid fa-rotate-right text-[12px]"></i>
+        <span id="forceSyncLabel">Force sync now</span>
+      </button>
+
+      <p class="text-[10.5px] text-stone-400 text-center mt-3 leading-relaxed">
+        Transactions recorded while offline are queued automatically and
+        synced when your connection returns.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ Notifications ============ -->
+  <section class="mb-5 fade-up">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 ml-1 flex items-center gap-2">
+      <i class="fa-solid fa-bell text-[10px]"></i>
+      <span>Notifications</span>
+    </h2>
+    <div class="rounded-2xl border border-stone-200 overflow-hidden">
+
+      <div class="settings-row">
+        <div class="settings-icon bg-emerald-50 text-emerald-600">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Deposit confirmations</p>
+          <p class="text-[11px] text-stone-500 mt-0.5">Notify on every successful deposit</p>
+        </div>
+        <button class="toggle notif-toggle" data-key="notifyDeposits" role="switch" aria-checked="true" aria-label="Toggle deposit confirmations"></button>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-icon bg-red-50 text-red-600">
+          <i class="fa-solid fa-circle-exclamation"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Withdrawal alerts</p>
+          <p class="text-[11px] text-stone-500 mt-0.5">Alert on withdrawals and failures</p>
+        </div>
+        <button class="toggle notif-toggle" data-key="notifyWithdrawals" role="switch" aria-checked="true" aria-label="Toggle withdrawal alerts"></button>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-icon bg-amber-50 text-amber-600">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Sync warnings</p>
+          <p class="text-[11px] text-stone-500 mt-0.5">Warn if transactions stay unsynced</p>
+        </div>
+        <button class="toggle notif-toggle" data-key="notifySync" role="switch" aria-checked="true" aria-label="Toggle sync warnings"></button>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-icon bg-stone-100 text-stone-600">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">System updates</p>
+          <p class="text-[11px] text-stone-500 mt-0.5">New features and guidance</p>
+        </div>
+        <button class="toggle notif-toggle" data-key="notifySystem" role="switch" aria-checked="false" aria-label="Toggle system updates"></button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ Support ============ -->
+  <section class="mb-5 fade-up">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 ml-1 flex items-center gap-2">
+      <i class="fa-solid fa-life-ring text-[10px]"></i>
+      <span>Support &amp; security</span>
+    </h2>
+    <div class="rounded-2xl border border-stone-200 overflow-hidden">
+
+      <button class="settings-row" id="rowHelp" type="button">
+        <div class="settings-icon bg-brand-gold/15 text-brand-gold">
+          <i class="fa-solid fa-circle-question"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Help &amp; support</p>
+          <p class="text-[11px] text-stone-500 mt-0.5">FAQs · Contact administrator</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px]"></i>
+      </button>
+
+      <button class="settings-row" id="rowPrivacy" type="button">
+        <div class="settings-icon bg-blue-50 text-blue-600">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">Privacy &amp; security</p>
+          <p class="text-[11px] text-stone-500 mt-0.5">Session info · Data protection</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px]"></i>
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ============ Logout ============ -->
+  <section class="mb-6 fade-up">
+    <button id="logoutBtn" type="button"
+            class="w-full settings-row !py-4 rounded-2xl border border-red-200 hover:bg-red-50 transition-colors">
+      <div class="settings-icon bg-red-50 text-red-600">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13.5px] font-semibold text-red-700">Log out</p>
+        <p class="text-[11px] text-red-500 mt-0.5">You can sign in again anytime</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-red-300 text-[12px]"></i>
+    </button>
+  </section>
+
+  <!-- ============ Footer ============ -->
+  <div class="text-center text-[10.5px] text-stone-400 leading-relaxed fade-up">
+    <p>Area Supa Ventures · Collector App</p>
+    <p class="mt-1">Version 1.0.0</p>
+    <p class="mt-2" id="accountMeta">—</p>
+  </div>
+</main>
+
+<!-- ============================== MODALS ============================== -->
+
+<!-- ============ Change password modal ============ -->
+<div id="passwordModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl modal-center overflow-hidden">
+    <div class="px-6 pt-6 pb-4 flex items-center gap-3 border-b border-stone-100">
+      <div class="w-10 h-10 rounded-full bg-brand-gold/15 text-brand-gold flex items-center justify-center">
+        <i class="fa-solid fa-key"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-[15px] font-bold text-stone-900">Change password</h3>
+        <p class="text-[11.5px] text-stone-500 mt-0.5">Choose a strong password</p>
+      </div>
+      <button id="closePasswordModal" type="button" aria-label="Close"
+              class="w-8 h-8 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-[16px]"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4" id="passwordFormBody">
+      <div>
+        <label for="currentPwd" class="field-label">Current password</label>
+        <input id="currentPwd" class="field-input" type="password" autocomplete="current-password" />
+        <p class="field-error" id="currentPwdError">Enter your current password.</p>
+      </div>
+      <div>
+        <label for="newPwd" class="field-label">New password</label>
+        <input id="newPwd" class="field-input" type="password" autocomplete="new-password" />
+        <p class="field-error" id="newPwdError">Password must be at least 8 characters.</p>
+      </div>
+      <div>
+        <label for="confirmPwd" class="field-label">Confirm new password</label>
+        <input id="confirmPwd" class="field-input" type="password" autocomplete="new-password" />
+        <p class="field-error" id="confirmPwdError">Passwords do not match.</p>
+      </div>
+
+      <div id="passwordError" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5 text-[12px]"></i>
+        <p id="passwordErrorMsg" class="text-[12px] text-red-800 font-medium"></p>
+      </div>
+
+      <button id="savePasswordBtn" type="button"
+              class="w-full py-3.5 bg-[#212121] hover:bg-black active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white text-[13px] font-semibold rounded-xl shadow transition-all flex items-center justify-center gap-2">
+        <span id="savePasswordLabel">Update password</span>
+        <i id="savePasswordSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-[12px]"></i>
+      </button>
+    </div>
+
+    <!-- Shown for phone-only users -->
+    <div id="passwordUnavailable" class="hidden p-6">
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 flex items-start gap-3">
+        <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
+        <div>
+          <p class="text-[13px] font-semibold text-amber-800">Password change unavailable</p>
+          <p class="text-[12px] text-amber-700 mt-1 leading-relaxed">
+            Your account signs in with a phone number. Password changes aren't
+            required for phone-based sign-in.
+          </p>
+        </div>
+      </div>
+      <button id="closePasswordModal2" type="button"
+              class="mt-4 w-full py-3 bg-white border border-stone-300 hover:bg-stone-50 text-stone-900 text-[13px] font-semibold rounded-xl">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Language modal ============ -->
+<div id="languageModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl sheet-content overflow-hidden">
+    <div class="px-6 pt-6 pb-4 flex items-center justify-between border-b border-stone-100">
+      <div>
+        <h3 class="text-[15px] font-bold text-stone-900">Language</h3>
+        <p class="text-[11.5px] text-stone-500 mt-0.5">Choose your preferred language</p>
+      </div>
+      <button id="closeLanguageModal" type="button" aria-label="Close"
+              class="w-8 h-8 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-[16px]"></i>
+      </button>
+    </div>
+    <div id="languageList" class="py-2">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ============ Help & support modal ============ -->
+<div id="helpModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl sheet-content overflow-hidden">
+    <div class="px-6 pt-6 pb-4 flex items-center justify-between border-b border-stone-100">
+      <div>
+        <h3 class="text-[15px] font-bold text-stone-900">Help &amp; support</h3>
+        <p class="text-[11.5px] text-stone-500 mt-0.5">We're here to help</p>
+      </div>
+      <button id="closeHelpModal" type="button" aria-label="Close"
+              class="w-8 h-8 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-[16px]"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-3">
+      <a id="helpCall" href="tel:+233240000000"
+         class="w-full flex items-center gap-3 p-4 rounded-xl border border-stone-200 hover:bg-stone-50 transition-colors">
+        <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-phone"></i>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <p class="text-[13.5px] font-semibold text-stone-900">Call support</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5">Speak with the administrator</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px]"></i>
+      </a>
+
+      <a id="helpWhatsApp" href="#" target="_blank" rel="noopener"
+         class="w-full flex items-center gap-3 p-4 rounded-xl border border-stone-200 hover:bg-stone-50 transition-colors">
+        <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <i class="fa-brands fa-whatsapp"></i>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <p class="text-[13.5px] font-semibold text-stone-900">Send message</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5">Chat on WhatsApp</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px]"></i>
+      </a>
+
+      <a id="helpEmail" href="mailto:support@areasupa.com"
+         class="w-full flex items-center gap-3 p-4 rounded-xl border border-stone-200 hover:bg-stone-50 transition-colors">
+        <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-envelope"></i>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <p class="text-[13.5px] font-semibold text-stone-900">Email support</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5">support@areasupa.com</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px]"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Privacy & security modal ============ -->
+<div id="privacyModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl sheet-content overflow-hidden max-h-[90vh] flex flex-col">
+    <div class="px-6 pt-6 pb-4 flex items-center justify-between border-b border-stone-100 shrink-0">
+      <div>
+        <h3 class="text-[15px] font-bold text-stone-900">Privacy &amp; security</h3>
+        <p class="text-[11.5px] text-stone-500 mt-0.5">Your session and data</p>
+      </div>
+      <button id="closePrivacyModal" type="button" aria-label="Close"
+              class="w-8 h-8 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-[16px]"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-4 overflow-y-auto" id="privacyBody">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ============ Logout confirmation ============ -->
+<div id="logoutModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-7 modal-center">
+    <div class="text-center">
+      <div class="w-14 h-14 rounded-full bg-red-50 mx-auto flex items-center justify-center">
+        <i class="fa-solid fa-right-from-bracket text-xl text-red-600"></i>
+      </div>
+      <h3 class="mt-4 text-[16px] font-bold text-stone-900">Log out?</h3>
+      <p class="mt-1.5 text-[12.5px] text-stone-500 leading-relaxed">
+        You can sign in again anytime. Make sure all your transactions are synced.
+      </p>
+    </div>
+    <div class="mt-6 grid grid-cols-2 gap-3">
+      <button id="cancelLogout" type="button"
+              class="py-3 bg-white border border-stone-300 text-stone-900 text-[13px] font-semibold rounded-xl hover:bg-stone-50">
+        Cancel
+      </button>
+      <button id="confirmLogout" type="button"
+              class="py-3 bg-[#B93838] hover:bg-[#9e3030] text-white text-[13px] font-semibold rounded-xl flex items-center justify-center gap-2">
+        <span id="confirmLogoutLabel">Log out</span>
+        <i id="confirmLogoutSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-[12px]"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Toast ============ -->
+<div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-xl bg-stone-900 text-white text-[12.5px] font-medium shadow-lg fade-up"></div>
+
+<!-- ============================== SCRIPT ============================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut,
+  EmailAuthProvider, reauthenticateWithCredential, updatePassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore,
+  doc, getDoc, setDoc, serverTimestamp, waitForPendingWrites,
+  enableNetwork, disableNetwork
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { mountBottomNav } from './components/bottom-nav.js';
+mountBottomNav('profile');
+
+/* ---------- Firebase ---------- */
+const app = initializeApp({
+  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
+  authDomain: "area-supa-ventures.firebaseapp.com",
+  projectId: "area-supa-ventures",
+  storageBucket: "area-supa-ventures.firebasestorage.app",
+  messagingSenderId: "339989502774",
+  appId: "1:339989502774:web:6cbf99587d4317af0a7197"
+});
+const auth = getAuth(app);
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+} catch { db = getFirestore(app); }
+
+/* ---------- Refs ---------- */
+const $ = (id) => document.getElementById(id);
+const avatar = $('avatar'), pName = $('pName'), pMeta = $('pMeta'), pRoleText = $('pRoleText');
+const accountMeta = $('accountMeta');
+
+const rowChangePassword = $('rowChangePassword');
+const rowBiometric = $('rowBiometric');
+const biometricToggle = $('biometricToggle');
+const biometricHint = $('biometricHint');
+const rowLanguage = $('rowLanguage');
+const currentLanguage = $('currentLanguage');
+
+const syncDot = $('syncDot'), syncLabel = $('syncLabel'), syncPendingBadge = $('syncPendingBadge');
+const lastSyncTime = $('lastSyncTime'), connectionStatus = $('connectionStatus'), cacheStatus = $('cacheStatus');
+const forceSyncBtn = $('forceSyncBtn'), forceSyncIcon = $('forceSyncIcon'), forceSyncLabel = $('forceSyncLabel');
+
+const rowHelp = $('rowHelp'), rowPrivacy = $('rowPrivacy');
+const logoutBtn = $('logoutBtn');
+
+const notifToggles = document.querySelectorAll('.notif-toggle');
+
+// Modals
+const passwordModal = $('passwordModal'), closePasswordModal = $('closePasswordModal');
+const passwordFormBody = $('passwordFormBody');
+const passwordUnavailable = $('passwordUnavailable');
+const closePasswordModal2 = $('closePasswordModal2');
+const currentPwdEl = $('currentPwd'), newPwdEl = $('newPwd'), confirmPwdEl = $('confirmPwd');
+const currentPwdError = $('currentPwdError'), newPwdError = $('newPwdError'), confirmPwdError = $('confirmPwdError');
+const passwordError = $('passwordError'), passwordErrorMsg = $('passwordErrorMsg');
+const savePasswordBtn = $('savePasswordBtn'), savePasswordLabel = $('savePasswordLabel'), savePasswordSpinner = $('savePasswordSpinner');
+
+const languageModal = $('languageModal'), closeLanguageModal = $('closeLanguageModal'), languageList = $('languageList');
+const helpModal = $('helpModal'), closeHelpModal = $('closeHelpModal');
+const helpCall = $('helpCall'), helpWhatsApp = $('helpWhatsApp'), helpEmail = $('helpEmail');
+const privacyModal = $('privacyModal'), closePrivacyModal = $('closePrivacyModal'), privacyBody = $('privacyBody');
+
+const logoutModal = $('logoutModal'), cancelLogout = $('cancelLogout');
+const confirmLogout = $('confirmLogout'), confirmLogoutLabel = $('confirmLogoutLabel'), confirmLogoutSpinner = $('confirmLogoutSpinner');
+
+const toast = $('toast');
+
+/* ---------- Config ---------- */
+const SUPPORT_PHONE = '+233240000000';           // ← change to real number
+const SUPPORT_WHATSAPP = '233240000000';         // ← change to real number (no + or spaces)
+const SUPPORT_EMAIL = 'support@areasupa.com';    // ← change to real email
+const LANGUAGES = [
+  { code: 'en', name: 'English', native: 'English' },
+  { code: 'tw', name: 'Twi', native: 'Twi (Akan)' },
+  { code: 'ga', name: 'Ga', native: 'Gã' },
+  { code: 'ee', name: 'Ewe', native: 'Eʋegbe' }
+];
+const PREF_KEY = 'asv.profile.prefs.v1';
+const SYNC_KEY = 'asv.profile.lastSync.v1';
+
+/* ---------- Helpers ---------- */
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function initialsFrom(name, fallback = '?') {
+  if (!name) return fallback;
+  const p = String(name).trim().split(/\s+/);
+  return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || fallback;
+}
+function toastMsg(msg, tone = 'default') {
+  toast.textContent = msg;
+  toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-xl text-white text-[12.5px] font-medium shadow-lg fade-up ' +
+    (tone === 'error' ? 'bg-[#B93838]' : tone === 'success' ? 'bg-[#1B7F4B]' : 'bg-stone-900');
+  toast.classList.remove('hidden');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.add('hidden'), 2600);
+}
+
+/* ---------- Preferences (localStorage) ---------- */
+function readPrefs() {
+  try { return JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); } catch { return {}; }
+}
+function writePrefs(p) {
+  try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch {}
+}
+let prefs = readPrefs();
+const DEFAULT_NOTIFS = { notifyDeposits: true, notifyWithdrawals: true, notifySync: true, notifySystem: false };
+
+/* ---------- Profile load ---------- */
+let currentUser = null;
+
+function metaFromUser(u) {
+  const created = u.metadata?.creationTime ? new Date(u.metadata.creationTime) : null;
+  const lastSignIn = u.metadata?.lastSignInTime ? new Date(u.metadata.lastSignInTime) : null;
+  const parts = [];
+  if (created) parts.push(`Account created ${created.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`);
+  if (lastSignIn) parts.push(`Last sign-in ${lastSignIn.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}`);
+  return parts.join(' · ');
+}
+
+async function loadProfile() {
+  const u = currentUser;
+  if (!u) return;
+
+  const fallbackName = u.displayName || (u.email ? u.email.split('@')[0] : 'Collector');
+  let name = fallbackName;
+  let role = 'collector';
+
+  // Try Firestore profile
+  try {
+    const snap = await getDoc(doc(db, 'users', u.uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      name = data.name || fallbackName;
+      role = data.role || 'collector';
+    }
+  } catch (e) {
+    console.warn('Profile load failed, using auth fallback:', e);
+  }
+
+  avatar.textContent = initialsFrom(name, 'AS');
+  pName.textContent = name;
+  const ident = u.email || u.phoneNumber || '—';
+  pMeta.textContent = ident;
+  pRoleText.textContent = role === 'owner' ? 'Owner · Collector' : 'Collector';
+  accountMeta.textContent = metaFromUser(u);
+
+  // Password hint: email vs phone
+  const hasEmail = !!u.email;
+  $('passwordHint').textContent = hasEmail
+    ? 'Update your sign-in password'
+    : 'Not available for phone-only accounts';
+}
+
+/* ---------- Change password ---------- */
+function openPasswordModal() {
+  currentPwdEl.value = '';
+  newPwdEl.value = '';
+  confirmPwdEl.value = '';
+  [currentPwdError, newPwdError, confirmPwdError].forEach(el => el.classList.remove('show'));
+  passwordError.classList.add('hidden');
+
+  const u = currentUser;
+  if (!u) return;
+
+  if (!u.email) {
+    passwordFormBody.classList.add('hidden');
+    passwordUnavailable.classList.remove('hidden');
+  } else {
+    passwordFormBody.classList.remove('hidden');
+    passwordUnavailable.classList.add('hidden');
+  }
+  passwordModal.classList.remove('hidden');
+}
+rowChangePassword.addEventListener('click', openPasswordModal);
+closePasswordModal.addEventListener('click', () => passwordModal.classList.add('hidden'));
+closePasswordModal2.addEventListener('click', () => passwordModal.classList.add('hidden'));
+
+function showPasswordError(msg) {
+  passwordErrorMsg.textContent = msg;
+  passwordError.classList.remove('hidden');
+}
+function hidePasswordError() { passwordError.classList.add('hidden'); }
+
+savePasswordBtn.addEventListener('click', async () => {
+  hidePasswordError();
+  [currentPwdError, newPwdError, confirmPwdError].forEach(el => el.classList.remove('show'));
+
+  const cur = currentPwdEl.value;
+  const nw = newPwdEl.value;
+  const conf = confirmPwdEl.value;
+  let ok = true;
+
+  if (!cur) { currentPwdError.classList.add('show'); ok = false; }
+  if (!nw || nw.length < 8) { newPwdError.classList.add('show'); ok = false; }
+  if (nw !== conf) { confirmPwdError.classList.add('show'); ok = false; }
+  if (!ok) return;
+
+  const u = currentUser;
+  if (!u || !u.email) { showPasswordError('Password change is not available for this account.'); return; }
+
+  savePasswordBtn.disabled = true;
+  savePasswordSpinner.classList.remove('hidden');
+  savePasswordLabel.textContent = 'Updating…';
+
+  try {
+    const cred = EmailAuthProvider.credential(u.email, cur);
+    await reauthenticateWithCredential(u, cred);
+    await updatePassword(u, nw);
+
+    savePasswordLabel.textContent = 'Updated';
+    toastMsg('Password updated successfully.', 'success');
+    setTimeout(() => passwordModal.classList.add('hidden'), 900);
+  } catch (e) {
+    console.error('Password change failed:', e);
+    const code = e?.code || '';
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      currentPwdError.classList.add('show');
+    } else if (code === 'auth/weak-password') {
+      newPwdError.textContent = 'Password is too weak. Use at least 8 characters.';
+      newPwdError.classList.add('show');
+    } else if (code === 'auth/requires-recent-login') {
+      showPasswordError('Please sign out and sign in again, then try.');
+    } else if (code === 'auth/network-request-failed') {
+      showPasswordError('Network error. Check your connection.');
+    } else {
+      showPasswordError(e?.message || 'Could not update password.');
+    }
+  } finally {
+    savePasswordBtn.disabled = false;
+    savePasswordSpinner.classList.add('hidden');
+    savePasswordLabel.textContent = 'Update password';
+  }
+});
+
+/* ---------- Biometric login (WebAuthn) ---------- */
+async function checkBiometric() {
+  try {
+    if (!window.PublicKeyCredential || !navigator.credentials) {
+      biometricHint.textContent = 'Not supported on this device';
+      biometricToggle.disabled = true;
+      return;
+    }
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!available) {
+      biometricHint.textContent = 'No biometric sensor available';
+      biometricToggle.disabled = true;
+      return;
+    }
+    biometricToggle.disabled = false;
+    const enabled = !!prefs.biometricEnabled;
+    biometricToggle.setAttribute('aria-checked', String(enabled));
+    biometricHint.textContent = enabled ? 'Enabled · Face / fingerprint unlock' : 'Tap to enable';
+  } catch (e) {
+    console.warn('Biometric check failed:', e);
+    biometricHint.textContent = 'Unavailable';
+    biometricToggle.disabled = true;
+  }
+}
+
+biometricToggle.addEventListener('click', async () => {
+  const u = currentUser;
+  if (!u) return;
+
+  const isOn = biometricToggle.getAttribute('aria-checked') === 'true';
+
+  if (isOn) {
+    // Disable
+    prefs.biometricEnabled = false;
+    delete prefs.biometricCredentialId;
+    writePrefs(prefs);
+    biometricToggle.setAttribute('aria-checked', 'false');
+    biometricHint.textContent = 'Tap to enable';
+    toastMsg('Biometric login disabled.');
+    return;
+  }
+
+  // Enable — prompt biometric registration
+  biometricToggle.disabled = true;
+  biometricHint.textContent = 'Waiting for biometric…';
+
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = new TextEncoder().encode(u.uid);
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: 'Area Supa Ventures' },
+        user: {
+          id: userId,
+          name: u.email || u.phoneNumber || u.uid,
+          displayName: pName.textContent || 'Collector'
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7 },
+          { type: 'public-key', alg: -257 }
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required',
+          residentKey: 'preferred'
+        },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    });
+
+    if (!cred) throw new Error('Biometric registration cancelled.');
+
+    // Store credential ID (base64) locally
+    const credId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    prefs.biometricEnabled = true;
+    prefs.biometricCredentialId = credId;
+    writePrefs(prefs);
+
+    biometricToggle.setAttribute('aria-checked', 'true');
+    biometricHint.textContent = 'Enabled · Face / fingerprint unlock';
+    toastMsg('Biometric login enabled.', 'success');
+  } catch (e) {
+    console.warn('Biometric enable failed:', e);
+    biometricHint.textContent = 'Enable failed — try again';
+    toastMsg('Could not enable biometric login.', 'error');
+  } finally {
+    biometricToggle.disabled = false;
+  }
+});
+
+/* ---------- Language ---------- */
+function openLanguageModal() {
+  languageList.innerHTML = LANGUAGES.map(l => {
+    const active = (prefs.language || 'en') === l.code;
+    return `
+      <button class="w-full flex items-center gap-3 px-6 py-4 hover:bg-stone-50 transition-colors text-left"
+              data-lang="${l.code}">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-brand-gold text-white' : 'bg-stone-100 text-stone-500'}">
+          <i class="fa-solid fa-language text-[14px]"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold text-stone-900">${escapeHtml(l.name)}</p>
+          <p class="text-[11px] text-stone-500 mt-0.5">${escapeHtml(l.native)}</p>
+        </div>
+        ${active ? '<i class="fa-solid fa-check text-brand-gold text-[14px]"></i>' : ''}
+      </button>`;
+  }).join('');
+
+  languageList.querySelectorAll('button[data-lang]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.getAttribute('data-lang');
+      prefs.language = code;
+      writePrefs(prefs);
+      const chosen = LANGUAGES.find(l => l.code === code);
+      currentLanguage.textContent = chosen ? chosen.name : code;
+      languageModal.classList.add('hidden');
+      toastMsg(`Language set to ${chosen ? chosen.name : code}.`);
+      // Note: full localisation is a future enhancement.
+    });
+  });
+
+  languageModal.classList.remove('hidden');
+}
+rowLanguage.addEventListener('click', openLanguageModal);
+closeLanguageModal.addEventListener('click', () => languageModal.classList.add('hidden'));
+
+/* ---------- Notifications preferences ---------- */
+function applyNotifPrefs() {
+  notifToggles.forEach(t => {
+    const key = t.getAttribute('data-key');
+    const v = key in prefs ? !!prefs[key] : (DEFAULT_NOTIFS[key] ?? true);
+    t.setAttribute('aria-checked', String(v));
+  });
+}
+
+notifToggles.forEach(t => {
+  t.addEventListener('click', () => {
+    const key = t.getAttribute('data-key');
+    const cur = t.getAttribute('aria-checked') === 'true';
+    const nxt = !cur;
+    t.setAttribute('aria-checked', String(nxt));
+    prefs[key] = nxt;
+    writePrefs(prefs);
+    saveNotifToFirestore();
+
+    // Human-friendly label
+    const label = key.replace(/^notify/, '').replace(/([A-Z])/g, ' $1').trim().toLowerCase();
+    toastMsg(`${nxt ? 'Enabled' : 'Disabled'} ${label} notifications.`);
+  });
+});
+
+async function saveNotifToFirestore() {
+  const u = currentUser;
+  if (!u) return;
+  try {
+    await setDoc(doc(db, 'users', u.uid), {
+      preferences: {
+        notifyDeposits: !!prefs.notifyDeposits,
+        notifyWithdrawals: !!prefs.notifyWithdrawals,
+        notifySync: !!prefs.notifySync,
+        notifySystem: !!prefs.notifySystem,
+        language: prefs.language || 'en'
+      },
+      preferencesUpdatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.warn('Preference save failed (will retry on next change):', e);
+  }
+}
+
+/* ---------- Data synchronization ---------- */
+function setSyncState(state, label, dotClass) {
+  syncDot.className = 'w-2.5 h-2.5 rounded-full ' + (dotClass || 'bg-stone-300');
+  syncLabel.textContent = label;
+}
+function fmtRelative(ts) {
+  if (!ts) return '—';
+  const diff = Date.now() - ts;
+  const sec = Math.floor(diff / 1000);
+  if (sec < 5) return 'Just now';
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min} min${min === 1 ? '' : 's'} ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} hr${hr === 1 ? '' : 's'} ago`;
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' · ' +
+         d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function updateConnectionUI() {
+  const online = navigator.onLine;
+  connectionStatus.textContent = online ? 'Online' : 'Offline';
+  connectionStatus.className = 'font-medium text-right ' + (online ? 'text-emerald-600' : 'text-amber-600');
+
+  // Cache status
+  try {
+    let bytes = 0;
+    for (const key in localStorage) {
+      if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
+        bytes += (localStorage[key] || '').length + key.length;
+      }
+    }
+    if (bytes < 1024) cacheStatus.textContent = `${bytes} B`;
+    else if (bytes < 1024 * 1024) cacheStatus.textContent = `${(bytes/1024).toFixed(1)} KB`;
+    else cacheStatus.textContent = `${(bytes/1024/1024).toFixed(1)} MB`;
+  } catch { cacheStatus.textContent = '—'; }
+
+  const lastSync = Number(localStorage.getItem(SYNC_KEY)) || 0;
+  lastSyncTime.textContent = lastSync ? fmtRelative(lastSync) : 'Not yet synced';
+
+  if (online) {
+    setSyncState('online', 'Connected', 'bg-emerald-500 animate-pulse');
+  } else {
+    setSyncState('offline', 'Offline · writes queued', 'bg-amber-500');
+    syncPendingBadge.classList.remove('hidden');
+    syncPendingBadge.textContent = 'Offline';
+  }
+
+  // If online and last sync older than 30s, mark as "stale"
+  if (online && lastSync && (Date.now() - lastSync) > 60 * 1000) {
+    setSyncState('stale', 'Connected · last sync ' + fmtRelative(lastSync), 'bg-emerald-500');
+  }
+
+  forceSyncBtn.disabled = !online;
+  forceSyncLabel.textContent = online ? 'Force sync now' : 'Offline — reconnect to sync';
+}
+
+async function forceSync() {
+  if (!navigator.onLine) {
+    toastMsg('You are offline. Reconnect and try again.', 'error');
+    return;
+  }
+
+  forceSyncBtn.disabled = true;
+  forceSyncIcon.classList.add('fa-spin');
+  forceSyncLabel.textContent = 'Syncing…';
+  setSyncState('syncing', 'Syncing pending writes…', 'bg-amber-500 animate-pulse');
+
+  try {
+    // Wait for pending writes to commit
+    await waitForPendingWrites(db);
+
+    // Record success
+    localStorage.setItem(SYNC_KEY, String(Date.now()));
+
+    setSyncState('online', 'All data synced', 'bg-emerald-500 animate-pulse');
+    syncPendingBadge.classList.add('hidden');
+    toastMsg('All data is synced.', 'success');
+  } catch (e) {
+    console.error('Force sync failed:', e);
+    setSyncState('error', 'Sync failed — retry', 'bg-red-500');
+    toastMsg('Sync failed. Check your connection.', 'error');
+  } finally {
+    forceSyncIcon.classList.remove('fa-spin');
+    forceSyncBtn.disabled = false;
+    forceSyncLabel.textContent = 'Force sync now';
+    updateConnectionUI();
+  }
+}
+forceSyncBtn.addEventListener('click', forceSync);
+
+window.addEventListener('online', () => { updateConnectionUI(); });
+window.addEventListener('offline', () => { updateConnectionUI(); });
+
+/* ---------- Help & support ---------- */
+rowHelp.addEventListener('click', () => {
+  helpCall.href = `tel:${SUPPORT_PHONE}`;
+  helpWhatsApp.href = `https://wa.me/${SUPPORT_WHATSAPP}`;
+  helpEmail.href = `mailto:${SUPPORT_EMAIL}`;
+  helpModal.classList.remove('hidden');
+});
+closeHelpModal.addEventListener('click', () => helpModal.classList.add('hidden'));
+
+/* ---------- Privacy & security ---------- */
+rowPrivacy.addEventListener('click', () => {
+  const u = currentUser;
+  const created = u?.metadata?.creationTime ? new Date(u.metadata.creationTime).toLocaleString('en-GB') : '—';
+  const lastSignIn = u?.metadata?.lastSignInTime ? new Date(u.metadata.lastSignInTime).toLocaleString('en-GB') : '—';
+  const provider = u?.providerData?.[0]?.providerId || (u?.phoneNumber ? 'phone' : 'email');
+
+  privacyBody.innerHTML = `
+    <div class="space-y-3">
+      <div class="flex items-start justify-between gap-3 text-[12.5px] py-2 border-b border-stone-100">
+        <span class="text-stone-500">Sign-in method</span>
+        <span class="font-semibold text-stone-900 text-right capitalize">${escapeHtml(provider)}</span>
+      </div>
+      <div class="flex items-start justify-between gap-3 text-[12.5px] py-2 border-b border-stone-100">
+        <span class="text-stone-500">Account created</span>
+        <span class="font-semibold text-stone-900 text-right">${escapeHtml(created)}</span>
+      </div>
+      <div class="flex items-start justify-between gap-3 text-[12.5px] py-2 border-b border-stone-100">
+        <span class="text-stone-500">Last sign-in</span>
+        <span class="font-semibold text-stone-900 text-right">${escapeHtml(lastSignIn)}</span>
+      </div>
+      <div class="flex items-start justify-between gap-3 text-[12.5px] py-2 border-b border-stone-100">
+        <span class="text-stone-500">Biometric unlock</span>
+        <span class="font-semibold ${prefs.biometricEnabled ? 'text-emerald-600' : 'text-stone-500'} text-right">
+          ${prefs.biometricEnabled ? 'Enabled' : 'Disabled'}
+        </span>
+      </div>
+    </div>
+
+    <div class="rounded-xl bg-stone-50 border border-stone-200 p-4 text-[12px] text-stone-600 leading-relaxed">
+      <p class="font-semibold text-stone-800 mb-1.5">Your data is protected</p>
+      <p>Customer information is stored securely in the cloud and only accessible
+         to signed-in collectors. Financial records cannot be deleted or modified
+         after they are recorded. Corrections are made through reversing entries only.</p>
+    </div>
+
+    <div class="rounded-xl bg-blue-50 border border-blue-200 p-4 text-[12px] text-blue-900 leading-relaxed">
+      <p class="font-semibold mb-1.5">Data Protection Act (Act 843)</p>
+      <p>Your business operates in compliance with Ghana's Data Protection Act.
+         Customer personal data is used only for susu management purposes.</p>
+    </div>
+  `;
+
+  privacyModal.classList.remove('hidden');
+});
+closePrivacyModal.addEventListener('click', () => privacyModal.classList.add('hidden'));
+
+/* ---------- Logout ---------- */
+logoutBtn.addEventListener('click', () => {
+  logoutModal.classList.remove('hidden');
+});
+cancelLogout.addEventListener('click', () => logoutModal.classList.add('hidden'));
+
+confirmLogout.addEventListener('click', async () => {
+  confirmLogout.disabled = true;
+  confirmLogoutSpinner.classList.remove('hidden');
+  confirmLogoutLabel.textContent = 'Logging out…';
+
+  try {
+    // Best effort: flush pending writes before signing out
+    if (navigator.onLine) {
+      try { await waitForPendingWrites(db); } catch {}
+    }
+    await signOut(auth);
+    window.location.replace('index.html');
+  } catch (e) {
+    console.error('Logout failed:', e);
+    confirmLogout.disabled = false;
+    confirmLogoutSpinner.classList.add('hidden');
+    confirmLogoutLabel.textContent = 'Log out';
+    toastMsg('Could not log out. Try again.', 'error');
+  }
+});
+
+/* ---------- Backdrop click to close modals ---------- */
+[
+  [passwordModal, closePasswordModal],
+  [languageModal, closeLanguageModal],
+  [helpModal, closeHelpModal],
+  [privacyModal, closePrivacyModal],
+  [logoutModal, cancelLogout]
+].forEach(([modal, closer]) => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.add('hidden');
+  });
+});
+
+/* ---------- Auth guard + init ---------- */
+onAuthStateChanged(auth, async (u) => {
+  if (!u) { window.location.replace('index.html'); return; }
+  currentUser = u;
+
+  // Load preferences from Firestore if not present locally
+  try {
+    const snap = await getDoc(doc(db, 'users', u.uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.preferences) {
+        prefs = { ...data.preferences, ...prefs }; // local wins if set
+        writePrefs(prefs);
+      }
+    }
+  } catch {}
+
+  await loadProfile();
+  applyNotifPrefs();
+  checkBiometric();
+  updateConnectionUI();
+
+  // Language display
+  const lang = LANGUAGES.find(l => l.code === (prefs.language || 'en'));
+  currentLanguage.textContent = lang ? lang.name : 'English';
+
+  // Update last sync time display periodically
+  setInterval(updateConnectionUI, 30000);
+});
+</script>
+
+</body>
+</html>

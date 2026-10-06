@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Reports — Area Supa Ventures</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<script>
+tailwind.config = { theme: { extend: {
+  colors: {
+    'brand-gold': '#C59A3F', 'brand-gold-dark': '#B08632',
+    'brand-charcoal': '#212121', 'brand-bg': '#F8F6F2',
+    'brand-success': '#1B7F4B', 'brand-danger': '#B93838',
+  },
+  fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] },
+}}};
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { user-select: none; background: #F8F6F2; }
+  input, button, a { user-select: auto; }
+  ::-webkit-scrollbar { display: none; } * { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .skeleton {
+    background: linear-gradient(90deg,#e7e5e4 0%,#f5f4f2 50%,#e7e5e4 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+  .fade-up { animation: fadeUp 400ms ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .scope-tab { transition: all 150ms ease; }
+  .report-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; background: #fff; width: 100%;
+    transition: background-color 150ms; text-align: left;
+  }
+  .report-row:hover { background: #faf9f6; }
+  .report-row:not(:last-child) { border-bottom: 1px solid #f1efea; }
+
+  .report-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 15px;
+  }
+</style>
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen">
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="dashboard.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">Reports</h1>
+        <p class="text-[11px] text-stone-500 truncate">Business activity summary</p>
+      </div>
+    </div>
+    <button id="refreshBtn" type="button" aria-label="Refresh"
+            class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+      <i class="fa-solid fa-rotate-right text-[14px]"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ============ MAIN ============ -->
+<main class="max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-24">
+
+  <!-- Error banner -->
+  <div id="loadError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+    <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-red-800">Couldn’t load reports</p>
+      <p id="loadErrorMsg" class="text-[12px] text-red-700 mt-0.5">Check your connection and retry.</p>
+      <button id="retryBtn" type="button"
+              class="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-800 hover:text-red-900 underline underline-offset-2">
+        <i class="fa-solid fa-rotate-right text-[11px]"></i> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ Scope tabs ============ -->
+  <section class="mb-5 fade-up">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 ml-1 flex items-center gap-2">
+      <i class="fa-regular fa-calendar text-[10px]"></i>
+      <span>Report period</span>
+    </h2>
+    <div class="inline-flex p-1 bg-stone-100 rounded-xl">
+      <button data-scope="day"   class="scope-tab px-4 py-2 rounded-lg text-[12px] font-semibold">Daily</button>
+      <button data-scope="week"  class="scope-tab px-4 py-2 rounded-lg text-[12px] font-semibold">Weekly</button>
+      <button data-scope="month" class="scope-tab px-4 py-2 rounded-lg text-[12px] font-semibold">Monthly</button>
+    </div>
+    <p id="activeRange" class="text-[11.5px] text-stone-500 mt-2.5 ml-1">
+      <i class="fa-regular fa-clock mr-1"></i> <span class="skeleton inline-block w-40 h-3 align-middle"></span>
+    </p>
+  </section>
+
+  <!-- ============ Snapshot card ============ -->
+  <section class="rounded-2xl bg-[#20201E] text-white p-5 mb-5 relative overflow-hidden fade-up">
+    <div class="absolute -right-8 -top-8 w-32 h-32 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative">
+      <p class="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-400">Net movement</p>
+      <p id="netMovement" class="text-2xl font-extrabold text-brand-gold mt-1.5">
+        <span class="skeleton-dark w-32 h-7 inline-block"></span>
+      </p>
+      <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-stone-700/60">
+        <div>
+          <p class="text-[10.5px] uppercase tracking-wider text-stone-400">Deposits</p>
+          <p id="totalDeposits" class="text-[15px] font-bold text-emerald-400 mt-0.5">
+            <span class="skeleton-dark w-24 h-4 inline-block"></span>
+          </p>
+        </div>
+        <div class="text-right">
+          <p class="text-[10.5px] uppercase tracking-wider text-stone-400">Withdrawals</p>
+          <p id="totalWithdrawals" class="text-[15px] font-bold text-red-400 mt-0.5">
+            <span class="skeleton-dark w-24 h-4 inline-block"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Report list ============ -->
+  <section class="mb-6 fade-up">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 ml-1 flex items-center gap-2">
+      <i class="fa-solid fa-list text-[10px]"></i>
+      <span>Available reports</span>
+    </h2>
+
+    <div class="rounded-2xl border border-stone-200 overflow-hidden">
+      <!-- Deposit report -->
+      <a href="#" class="report-row" data-type="deposits">
+        <div class="report-icon bg-emerald-50 text-emerald-600">
+          <i class="fa-solid fa-arrow-down-to-line"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-bold text-stone-900">Deposit report</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5 truncate" data-preview="deposits">
+            <span class="skeleton inline-block w-32 h-3 align-middle"></span>
+          </p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px] shrink-0"></i>
+      </a>
+
+      <!-- Withdrawal report -->
+      <a href="#" class="report-row" data-type="withdrawals">
+        <div class="report-icon bg-red-50 text-red-600">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-bold text-stone-900">Withdrawal report</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5 truncate" data-preview="withdrawals">
+            <span class="skeleton inline-block w-32 h-3 align-middle"></span>
+          </p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px] shrink-0"></i>
+      </a>
+
+      <!-- Net savings movement -->
+      <a href="#" class="report-row" data-type="net">
+        <div class="report-icon bg-brand-gold/15 text-brand-gold">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-bold text-stone-900">Net savings movement</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5 truncate" data-preview="net">
+            <span class="skeleton inline-block w-32 h-3 align-middle"></span>
+          </p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px] shrink-0"></i>
+      </a>
+
+      <!-- Collector performance -->
+      <a href="#" class="report-row" data-type="collectors">
+        <div class="report-icon bg-blue-50 text-blue-600">
+          <i class="fa-solid fa-user-tie"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-bold text-stone-900">Collector performance</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5 truncate" data-preview="collectors">
+            <span class="skeleton inline-block w-32 h-3 align-middle"></span>
+          </p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px] shrink-0"></i>
+      </a>
+
+      <!-- Customer activity -->
+      <a href="#" class="report-row" data-type="customers">
+        <div class="report-icon bg-purple-50 text-purple-600">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-bold text-stone-900">Customer activity</p>
+          <p class="text-[11.5px] text-stone-500 mt-0.5 truncate" data-preview="customers">
+            <span class="skeleton inline-block w-32 h-3 align-middle"></span>
+          </p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-stone-300 text-[12px] shrink-0"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ Actions ============ -->
+  <section class="grid grid-cols-2 gap-3 fade-up">
+    <button id="exportAllBtn" type="button"
+            class="flex items-center justify-center gap-2 py-3.5 bg-white border border-stone-300 hover:bg-stone-50 text-stone-900 text-[13px] font-semibold rounded-xl shadow-sm transition-all">
+      <i class="fa-solid fa-file-csv text-brand-gold"></i> Export CSV
+    </button>
+    <button id="shareBtn" type="button"
+            class="flex items-center justify-center gap-2 py-3.5 bg-[#212121] hover:bg-black text-white text-[13px] font-semibold rounded-xl shadow transition-all">
+      <i class="fa-solid fa-share-nodes"></i> Share summary
+    </button>
+  </section>
+
+  <p id="lastUpdated" class="text-[10.5px] text-stone-400 text-center mt-6">
+    <i class="fa-regular fa-clock mr-1"></i> Loading…
+  </p>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore,
+  collection, query, where, orderBy, limit, getDocs, Timestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { mountBottomNav } from './components/bottom-nav.js';
+mountBottomNav('reports');
+
+/* ---------- Firebase ---------- */
+const app = initializeApp({
+  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
+  authDomain: "area-supa-ventures.firebaseapp.com",
+  projectId: "area-supa-ventures",
+  storageBucket: "area-supa-ventures.firebasestorage.app",
+  messagingSenderId: "339989502774",
+  appId: "1:339989502774:web:6cbf99587d4317af0a7197"
+});
+const auth = getAuth(app);
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch { db = getFirestore(app); }
+
+/* ---------- Refs ---------- */
+const $ = (id) => document.getElementById(id);
+const loadError = $('loadError'), loadErrorMsg = $('loadErrorMsg'), retryBtn = $('retryBtn');
+const refreshBtn = $('refreshBtn');
+const scopeTabs = document.querySelectorAll('.scope-tab');
+const activeRangeEl = $('activeRange');
+const netMovement = $('netMovement'), totalDeposits = $('totalDeposits'), totalWithdrawals = $('totalWithdrawals');
+const reportRows = document.querySelectorAll('.report-row[data-type]');
+const exportAllBtn = $('exportAllBtn'), shareBtn = $('shareBtn');
+const lastUpdatedEl = $('lastUpdated');
+
+/* ---------- State ---------- */
+let currentScope = 'day';
+let range = { start: null, end: null, label: '' };
+let tx = [];
+let currentUser = null;
+
+/* ---------- Helpers ---------- */
+function formatGHS(n) { const v = Number(n)||0; return v.toLocaleString('en-GH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function tsToDate(v){ if(!v) return null; if(v.toDate) return v.toDate(); if(v instanceof Date) return v; return new Date(v); }
+function ymd(d){ return new Date(d).toISOString().slice(0,10); }
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function endOfDay(d){ const x = new Date(d); x.setHours(23,59,59,999); return x; }
+function startOfWeek(d){ const x = startOfDay(d); const day = x.getDay() || 7; if (day !== 1) x.setDate(x.getDate() - (day - 1)); return x; }
+
+function computeRange(scope) {
+  const now = new Date();
+  if (scope === 'day') {
+    return { start: startOfDay(now), end: endOfDay(now),
+             label: 'Today · ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) };
+  }
+  if (scope === 'week') {
+    const s = startOfWeek(now);
+    return { start: s, end: endOfDay(now),
+             label: 'This week · ' + s.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' – ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) };
+  }
+  // month
+  const s = new Date(now.getFullYear(), now.getMonth(), 1);
+  return { start: s, end: endOfDay(now),
+           label: now.toLocaleDateString('en-GB',{month:'long', year:'numeric'}) };
+}
+
+function setActiveScope() {
+  scopeTabs.forEach(b => {
+    const active = b.getAttribute('data-scope') === currentScope;
+    b.className = 'scope-tab px-4 py-2 rounded-lg text-[12px] font-semibold ' + (
+      active ? 'bg-[#212121] text-white shadow' : 'text-stone-600 hover:text-stone-900'
+    );
+  });
+}
+
+function showError(msg) { loadErrorMsg.textContent = msg || 'Check your connection and retry.'; loadError.classList.remove('hidden'); }
+function hideError() { loadError.classList.add('hidden'); }
+
+/* ---------- Load ---------- */
+async function loadSummary() {
+  hideError();
+  range = computeRange(currentScope);
+  activeRangeEl.innerHTML = `<i class="fa-regular fa-clock mr-1"></i> ${escapeHtml(range.label)}`;
+
+  // Reset previews to skeletons
+  reportRows.forEach(row => {
+    const p = row.querySelector('[data-preview]');
+    if (p) p.innerHTML = '<span class="skeleton inline-block w-32 h-3 align-middle"></span>';
+  });
+  netMovement.innerHTML = '<span class="skeleton-dark w-32 h-7 inline-block"></span>';
+  totalDeposits.innerHTML = '<span class="skeleton-dark w-24 h-4 inline-block"></span>';
+  totalWithdrawals.innerHTML = '<span class="skeleton-dark w-24 h-4 inline-block"></span>';
+
+  try {
+    const q = query(
+      collection(db, 'transactions'),
+      where('createdAt', '>=', Timestamp.fromDate(range.start)),
+      where('createdAt', '<=', Timestamp.fromDate(range.end)),
+      orderBy('createdAt', 'desc'),
+      limit(2000)
+    );
+    const snap = await getDocs(q);
+    tx = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  } catch (e) {
+    console.error('Reports hub load failed:', e);
+    if (String(e?.message || '').toLowerCase().includes('index')) {
+      showError('A Firestore index is building for this query. Retry in ~1 minute.');
+    } else if (!navigator.onLine) {
+      showError('You’re offline. Reconnect to load reports.');
+    } else {
+      showError('Could not load reports. Check your connection and retry.');
+    }
+  }
+}
+
+function render() {
+  let dep = 0, wd = 0, depCount = 0, wdCount = 0;
+  const customers = new Set();
+  const collectors = new Set();
+
+  for (const t of tx) {
+    const amt = Number(t.amount) || 0;
+    if (t.type === 'deposit') { dep += amt; depCount++; }
+    else { wd += amt; wdCount++; }
+    if (t.customerId) customers.add(t.customerId);
+    if (t.createdBy) collectors.add(t.createdBy);
+  }
+
+  const net = dep - wd;
+
+  netMovement.textContent = (net >= 0 ? '+' : '−') + `GH₵${formatGHS(Math.abs(net))}`;
+  netMovement.className = 'text-2xl font-extrabold mt-1.5 ' + (net >= 0 ? 'text-brand-gold' : 'text-red-400');
+  totalDeposits.textContent = `GH₵${formatGHS(dep)}`;
+  totalWithdrawals.textContent = `GH₵${formatGHS(wd)}`;
+
+  // Row previews
+  setPreview('deposits',    `${depCount} transaction${depCount === 1 ? '' : 's'} · GH₵${formatGHS(dep)}`);
+  setPreview('withdrawals', `${wdCount} transaction${wdCount === 1 ? '' : 's'} · GH₵${formatGHS(wd)}`);
+  setPreview('net',         net >= 0 ? `+GH₵${formatGHS(net)} net increase` : `−GH₵${formatGHS(Math.abs(net))} net decrease`);
+  setPreview('collectors',  `${collectors.size} collector${collectors.size === 1 ? '' : 's'} active · ${tx.length} txns`);
+  setPreview('customers',   `${customers.size} customer${customers.size === 1 ? '' : 's'} served`);
+
+  // Row links
+  reportRows.forEach(row => {
+    const type = row.getAttribute('data-type');
+    row.href = `report-view.html?type=${type}&scope=${currentScope}`;
+  });
+
+  const now = new Date();
+  lastUpdatedEl.innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Updated ${now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`;
+}
+
+function setPreview(type, text) {
+  const el = document.querySelector(`[data-preview="${type}"]`);
+  if (el) el.textContent = text;
+}
+
+/* ---------- Scope tabs ---------- */
+scopeTabs.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentScope = btn.getAttribute('data-scope');
+    setActiveScope();
+    loadSummary();
+  });
+});
+
+/* ---------- Export all (CSV of the period) ---------- */
+exportAllBtn.addEventListener('click', () => {
+  if (!tx.length) { alert('Nothing to export in this period.'); return; }
+  const headers = ['Date','Time','Type','Customer','Account','Amount','Method','Reference','Balance After','Collector'];
+  const rows = tx.map(t => {
+    const d = tsToDate(t.createdAt);
+    return [
+      d ? d.toLocaleDateString('en-GB') : '',
+      d ? d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '',
+      t.type === 'deposit' ? 'Deposit' : 'Withdrawal',
+      t.customerName || '',
+      t.accountNumber || '',
+      (Number(t.amount)||0).toFixed(2),
+      t.paymentMethod || 'cash',
+      t.reference || '',
+      (Number(t.balanceAfter)||0).toFixed(2),
+      t.createdByName || ''
+    ];
+  });
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ASV-report-${currentScope}-${ymd(range.start)}-to-${ymd(range.end)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+/* ---------- Share summary ---------- */
+shareBtn.addEventListener('click', async () => {
+  const dep = totalDeposits.textContent;
+  const wd = totalWithdrawals.textContent;
+  const net = netMovement.textContent;
+  const text = [
+    `Area Supa Ventures — ${currentScope === 'day' ? 'Daily' : currentScope === 'week' ? 'Weekly' : 'Monthly'} Report`,
+    `${range.label}`,
+    ``,
+    `Deposits:     ${dep}`,
+    `Withdrawals:  ${wd}`,
+    `Net movement: ${net}`,
+    ``,
+    `Generated ${new Date().toLocaleString('en-GB')}`
+  ].join('\n');
+
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Area Supa Ventures Report', text }); return; }
+    catch (e) { if (e?.name === 'AbortError') return; }
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+});
+
+/* ---------- Refresh / Retry ---------- */
+refreshBtn.addEventListener('click', () => {
+  refreshBtn.querySelector('i').classList.add('fa-spin');
+  loadSummary().finally(() => {
+    setTimeout(() => refreshBtn.querySelector('i').classList.remove('fa-spin'), 400);
+  });
+});
+retryBtn.addEventListener('click', loadSummary);
+
+/* ---------- Init ---------- */
+onAuthStateChanged(auth, (u) => {
+  if (!u) { window.location.replace('index.html'); return; }
+  currentUser = u;
+  setActiveScope();
+  loadSummary();
+});
+</script>
+
+</body>
+</html>

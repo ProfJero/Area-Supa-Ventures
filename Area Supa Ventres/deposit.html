@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Record Deposit — Area Supa Ventures</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { 'brand-gold':'#C59A3F','brand-gold-dark':'#B08632','brand-charcoal':'#212121','brand-bg':'#F8F6F2' },
+  fontFamily: { sans:['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] }
+}}};
+</script>
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { user-select: none; background: #F8F6F2; }
+  input, textarea, button, a { user-select: auto; }
+  ::-webkit-scrollbar { display:none; } * { -ms-overflow-style:none; scrollbar-width:none; }
+  .skeleton { background: linear-gradient(90deg,#e7e5e4 0%,#f5f4f2 50%,#e7e5e4 100%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; }
+  .skeleton-dark { background: linear-gradient(90deg,#2b2a27 0%,#3a3833 50%,#2b2a27 100%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; }
+  @keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+  .fade-up { animation: fadeUp 400ms ease both; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform:translateY(0);} }
+  .amount-input { background: transparent; border: none; outline: none; text-align: center; font-weight: 800; letter-spacing: -0.02em; }
+  .amount-input::placeholder { color: #d6d3d1; }
+  .quick-amt { transition: all 150ms; }
+  .quick-amt:active { transform: scale(0.96); }
+</style>
+</head>
+<body class="font-sans text-stone-900 antialiased min-h-screen">
+
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a id="backBtn" href="#" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">Record deposit</h1>
+        <p id="subHeader" class="text-[11px] text-stone-500 truncate">Loading…</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-32">
+
+  <div id="loadError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+    <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
+    <div class="flex-1 min-w-0">
+      <p id="loadErrorTitle" class="text-sm font-semibold text-red-800">Couldn’t load customer</p>
+      <p id="loadErrorMsg" class="text-[12px] text-red-700 mt-0.5">Check your connection and retry.</p>
+      <button id="retryBtn" type="button"
+              class="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-800 hover:text-red-900 underline underline-offset-2">
+        <i class="fa-solid fa-rotate-right text-[11px]"></i> Retry
+      </button>
+    </div>
+  </div>
+
+  <section id="customerCard" class="rounded-2xl bg-[#20201E] text-white p-4 mb-6 relative overflow-hidden fade-up">
+    <div class="absolute -right-6 -top-6 w-28 h-28 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative flex items-center gap-3">
+      <div id="avatar" class="w-11 h-11 rounded-full bg-brand-gold/20 text-brand-gold font-bold text-[13px] flex items-center justify-center shrink-0">
+        <span class="skeleton-dark w-6 h-3 inline-block"></span>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p id="custName" class="text-[14px] font-bold truncate">
+          <span class="skeleton-dark inline-block w-32 h-4"></span>
+        </p>
+        <p id="custMeta" class="text-[11px] text-stone-400 mt-0.5 font-mono truncate">
+          <span class="skeleton-dark inline-block w-24 h-3"></span>
+        </p>
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-[10px] text-stone-400 uppercase tracking-wider">Balance</p>
+        <p id="custBal" class="text-[13px] font-bold text-brand-gold">
+          <span class="skeleton-dark inline-block w-20 h-3.5"></span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <form id="form" class="space-y-6 fade-up" novalidate>
+
+    <!-- Amount -->
+    <section>
+      <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-coins text-[10px]"></i> Amount
+      </label>
+      <div class="rounded-2xl bg-white border border-stone-200 p-6 text-center">
+        <div class="inline-flex items-baseline justify-center gap-2">
+          <span class="text-3xl font-bold text-brand-gold">GH₵</span>
+          <input id="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00"
+                 class="amount-input text-5xl text-stone-900 w-[200px]" />
+        </div>
+        <p id="amountError" class="hidden text-[12px] text-red-600 mt-3">Enter an amount greater than zero.</p>
+      </div>
+      <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
+        <button type="button" data-amt="5"   class="quick-amt py-2 bg-white border border-stone-200 text-[12px] font-semibold rounded-lg hover:border-brand-gold">5</button>
+        <button type="button" data-amt="10"  class="quick-amt py-2 bg-white border border-stone-200 text-[12px] font-semibold rounded-lg hover:border-brand-gold">10</button>
+        <button type="button" data-amt="20"  class="quick-amt py-2 bg-white border border-stone-200 text-[12px] font-semibold rounded-lg hover:border-brand-gold">20</button>
+        <button type="button" data-amt="50"  class="quick-amt py-2 bg-white border border-stone-200 text-[12px] font-semibold rounded-lg hover:border-brand-gold">50</button>
+        <button type="button" data-amt="100" class="quick-amt py-2 bg-white border border-stone-200 text-[12px] font-semibold rounded-lg hover:border-brand-gold">100</button>
+        <button type="button" data-amt="200" class="quick-amt py-2 bg-white border border-stone-200 text-[12px] font-semibold rounded-lg hover:border-brand-gold">200</button>
+      </div>
+    </section>
+
+    <!-- Payment method -->
+    <section>
+      <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-wallet text-[10px]"></i> Payment method
+      </label>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" data-pm="cash"
+                class="pm-btn py-3 px-4 rounded-xl border-2 text-[13px] font-semibold transition-all flex items-center justify-center gap-2">
+          <i class="fa-solid fa-money-bill-wave"></i> Cash
+        </button>
+        <button type="button" data-pm="momo"
+                class="pm-btn py-3 px-4 rounded-xl border-2 text-[13px] font-semibold transition-all flex items-center justify-center gap-2">
+          <i class="fa-solid fa-mobile-screen"></i> Mobile Money
+        </button>
+      </div>
+    </section>
+
+    <!-- Reference (MoMo only) -->
+    <section id="referenceSection" class="hidden">
+      <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-hashtag text-[10px]"></i> Reference
+      </label>
+      <input id="reference" type="text" placeholder="e.g. MoMo transaction ID"
+             class="w-full px-3.5 py-3 bg-white border border-stone-200 rounded-xl text-[13px] font-medium outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold" />
+    </section>
+
+    <!-- Notes -->
+    <section>
+      <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 flex items-center gap-2">
+        <i class="fa-regular fa-note-sticky text-[10px]"></i> Notes <span class="text-stone-400 normal-case font-normal tracking-normal">(optional)</span>
+      </label>
+      <textarea id="notes" rows="2" placeholder="Any additional information"
+                class="w-full px-3.5 py-3 bg-white border border-stone-200 rounded-xl text-[13px] font-medium outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold"></textarea>
+    </section>
+
+    <div id="submitError" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+      <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
+      <p id="submitErrorMsg" class="text-[12.5px] text-red-800 font-medium"></p>
+    </div>
+  </form>
+</main>
+
+<!-- Sticky submit -->
+<div class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 pb-[env(safe-area-inset-bottom)]">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-4">
+    <button id="submitBtn" type="button" disabled
+            class="w-full py-3.5 bg-[#212121] hover:bg-black active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl shadow transition-all flex items-center justify-center gap-2">
+      <i class="fa-solid fa-circle-check text-[14px]"></i>
+      <span id="submitLabel">Deposit</span>
+      <i id="submitSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-[12px]"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Receipt overlay -->
+<div id="receipt" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden fade-up">
+    <div class="p-8 text-center">
+      <div class="w-20 h-20 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
+        <i class="fa-solid fa-check text-3xl text-emerald-600"></i>
+      </div>
+      <p class="mt-5 text-[12.5px] font-medium text-stone-500 uppercase tracking-wider">Deposit recorded</p>
+      <p id="receiptAmount" class="mt-2 text-4xl font-extrabold text-stone-900 tracking-tight">GH₵0.00</p>
+    </div>
+    <div class="px-6 pb-2">
+      <div class="rounded-2xl bg-stone-50 p-4 space-y-2.5 text-[12.5px]">
+        <div class="flex justify-between gap-3"><span class="text-stone-500">Customer</span><span id="receiptName" class="font-semibold text-stone-900 text-right"></span></div>
+        <div class="flex justify-between gap-3"><span class="text-stone-500">Account</span><span id="receiptAcct" class="font-mono font-semibold text-stone-900 text-right"></span></div>
+        <div class="flex justify-between gap-3"><span class="text-stone-500">New balance</span><span id="receiptBalance" class="font-bold text-brand-gold text-right"></span></div>
+        <div class="flex justify-between gap-3"><span class="text-stone-500">Reference</span><span id="receiptRef" class="font-mono font-semibold text-stone-900 text-right"></span></div>
+        <div class="flex justify-between gap-3"><span class="text-stone-500">Date</span><span id="receiptDate" class="font-semibold text-stone-900 text-right"></span></div>
+      </div>
+    </div>
+    <div class="p-6 grid grid-cols-2 gap-3">
+      <button id="anotherBtn" class="py-3 bg-white border border-stone-300 text-stone-900 text-[13px] font-semibold rounded-xl hover:bg-stone-50">
+        Another
+      </button>
+      <button id="doneBtn" class="py-3 bg-[#212121] text-white text-[13px] font-semibold rounded-xl hover:bg-black">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore,
+  doc, collection, getDoc, runTransaction, serverTimestamp, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
+  authDomain: "area-supa-ventures.firebaseapp.com",
+  projectId: "area-supa-ventures",
+  storageBucket: "area-supa-ventures.firebasestorage.app",
+  messagingSenderId: "339989502774",
+  appId: "1:339989502774:web:6cbf99587d4317af0a7197"
+});
+const auth = getAuth(app);
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch { db = getFirestore(app); }
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const customerId = params.get('customerId');
+if (!customerId) window.location.replace('customers.html');
+
+const backBtn = $('backBtn'), subHeader = $('subHeader');
+const loadError = $('loadError'), loadErrorMsg = $('loadErrorMsg'), loadErrorTitle = $('loadErrorTitle'), retryBtn = $('retryBtn');
+const avatar = $('avatar'), custName = $('custName'), custMeta = $('custMeta'), custBal = $('custBal');
+const amountEl = $('amount'), amountError = $('amountError');
+const referenceSection = $('referenceSection'), referenceEl = $('reference');
+const notesEl = $('notes');
+const submitBtn = $('submitBtn'), submitLabel = $('submitLabel'), submitSpinner = $('submitSpinner');
+const submitError = $('submitError'), submitErrorMsg = $('submitErrorMsg');
+const receipt = $('receipt');
+const receiptAmount = $('receiptAmount'), receiptName = $('receiptName'), receiptAcct = $('receiptAcct');
+const receiptBalance = $('receiptBalance'), receiptRef = $('receiptRef'), receiptDate = $('receiptDate');
+const anotherBtn = $('anotherBtn'), doneBtn = $('doneBtn');
+
+let customer = null;
+let paymentMethod = 'cash';
+
+function formatGHS(n){ const v=Number(n)||0; return v.toLocaleString('en-GH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function initialsFrom(name){if(!name)return'??';const p=String(name).trim().split(/\s+/);return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase()||'??';}
+function round2(n){ return Math.round(Number(n) * 100) / 100; }
+
+function showLoadError(msg, title){
+  loadErrorTitle.textContent = title || 'Couldn’t load customer';
+  loadErrorMsg.textContent = msg || 'Check your connection and retry.';
+  loadError.classList.remove('hidden');
+}
+function hideLoadError(){ loadError.classList.add('hidden'); }
+function showSubmitError(msg){ submitErrorMsg.textContent = msg; submitError.classList.remove('hidden'); }
+function hideSubmitError(){ submitError.classList.add('hidden'); }
+
+function setPmButtonStyles() {
+  document.querySelectorAll('.pm-btn').forEach(b => {
+    const active = b.getAttribute('data-pm') === paymentMethod;
+    b.className = 'pm-btn py-3 px-4 rounded-xl border-2 text-[13px] font-semibold transition-all flex items-center justify-center gap-2 '
+      + (active
+        ? 'border-brand-gold bg-brand-gold/10 text-stone-900'
+        : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300');
+  });
+  referenceSection.classList.toggle('hidden', paymentMethod !== 'momo');
+}
+
+document.querySelectorAll('.pm-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    paymentMethod = b.getAttribute('data-pm');
+    setPmButtonStyles();
+  });
+});
+
+document.querySelectorAll('.quick-amt').forEach(b => {
+  b.addEventListener('click', () => {
+    amountEl.value = b.getAttribute('data-amt');
+    onAmountChange();
+  });
+});
+
+function sanitizeAmount(v) {
+  let s = String(v).replace(/[^\d.]/g, '');
+  const parts = s.split('.');
+  if (parts.length > 2) s = parts[0] + '.' + parts.slice(1).join('');
+  const p = s.split('.');
+  if (p[1] && p[1].length > 2) s = p[0] + '.' + p[1].slice(0, 2);
+  return s;
+}
+
+function currentAmount() {
+  const v = parseFloat(amountEl.value);
+  return isFinite(v) && v > 0 ? round2(v) : 0;
+}
+
+function onAmountChange() {
+  const amt = currentAmount();
+  amountEl.value = sanitizeAmount(amountEl.value);
+  submitBtn.disabled = amt <= 0 || !customer;
+  submitLabel.textContent = amt > 0 ? `Deposit GH₵${formatGHS(amt)}` : 'Deposit';
+  amountError.classList.toggle('hidden', amt > 0 || amountEl.value === '');
+  hideSubmitError();
+}
+
+amountEl.addEventListener('input', onAmountChange);
+
+async function loadCustomer() {
+  hideLoadError();
+  try {
+    const snap = await getDoc(doc(db, 'customers', customerId));
+    if (!snap.exists()) { showLoadError('Customer not found.', 'Customer missing'); return; }
+    customer = { id: snap.id, ...snap.data() };
+    renderCustomer();
+    onAmountChange();
+  } catch (e) {
+    console.error(e);
+    showLoadError('Could not reach the server. Check your connection and retry.');
+  }
+}
+
+function renderCustomer() {
+  const name = customer.fullName || 'Customer';
+  const acct = customer.accountNumber || '—';
+  avatar.textContent = initialsFrom(name);
+  custName.textContent = name;
+  custMeta.textContent = acct;
+  custBal.textContent = `GH₵${formatGHS(customer.balance)}`;
+  subHeader.textContent = `${name} • ${acct}`;
+  backBtn.href = `customer.html?id=${encodeURIComponent(customer.id)}`;
+}
+
+async function submitDeposit() {
+  const amount = currentAmount();
+  if (!amount) { amountError.classList.remove('hidden'); return; }
+  if (!customer) return;
+  if (!auth.currentUser) { showSubmitError('You must be signed in.'); return; }
+
+  hideSubmitError();
+  submitBtn.disabled = true;
+  submitSpinner.classList.remove('hidden');
+  submitLabel.textContent = 'Recording…';
+
+  const customerRef = doc(db, 'customers', customer.id);
+  const txRef = doc(collection(db, 'transactions'));
+  const reference = paymentMethod === 'momo' ? (referenceEl.value.trim() || null) : null;
+  const notes = notesEl.value.trim() || null;
+
+  try {
+    const result = await runTransaction(db, async (t) => {
+      const cSnap = await t.get(customerRef);
+      if (!cSnap.exists()) throw new Error('CUSTOMER_NOT_FOUND');
+
+      const c = cSnap.data();
+      const currentBalance = Number(c.balance) || 0;
+      const currentDeposits = Number(c.totalDeposits) || 0;
+      const newBalance = round2(currentBalance + amount);
+      const newDeposits = round2(currentDeposits + amount);
+
+      t.set(txRef, {
+        customerId: customer.id,
+        accountNumber: c.accountNumber || null,
+        customerName: c.fullName || null,
+        type: 'deposit',
+        amount,
+        paymentMethod,
+        reference,
+        notes,
+        balanceAfter: newBalance,
+        status: 'completed',
+        createdAt: serverTimestamp(),
+        createdBy: auth.currentUser.uid,
+        createdByName: auth.currentUser.email || null
+      });
+
+      t.update(customerRef, {
+        balance: newBalance,
+        totalDeposits: newDeposits,
+        updatedAt: serverTimestamp()
+      });
+
+      return { txId: txRef.id, newBalance, customerName: c.fullName, accountNumber: c.accountNumber };
+    });
+
+    showReceipt({ ...result, amount, paymentMethod, reference });
+  } catch (err) {
+    console.error('Deposit failed:', err);
+    if (!navigator.onLine) {
+      showSubmitError('You’re offline. Reconnect and try again.');
+    } else if (String(err?.message) === 'CUSTOMER_NOT_FOUND') {
+      showSubmitError('Customer no longer exists.');
+    } else {
+      showSubmitError('Could not record the deposit. Please try again.');
+    }
+  } finally {
+    submitBtn.disabled = false;
+    submitSpinner.classList.add('hidden');
+    onAmountChange();
+  }
+}
+
+function showReceipt({ txId, newBalance, amount, reference, customerName, accountNumber }) {
+  receiptAmount.textContent = `GH₵${formatGHS(amount)}`;
+  receiptName.textContent = customerName || '—';
+  receiptAcct.textContent = accountNumber || '—';
+  receiptBalance.textContent = `GH₵${formatGHS(newBalance)}`;
+  receiptRef.textContent = reference || txId.slice(0, 10).toUpperCase();
+  receiptDate.textContent = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  receipt.classList.remove('hidden');
+}
+
+submitBtn.addEventListener('click', submitDeposit);
+retryBtn.addEventListener('click', loadCustomer);
+
+doneBtn.addEventListener('click', () => {
+  window.location.replace(`customer.html?id=${encodeURIComponent(customerId)}`);
+});
+
+anotherBtn.addEventListener('click', () => {
+  receipt.classList.add('hidden');
+  amountEl.value = '';
+  referenceEl.value = '';
+  notesEl.value = '';
+  onAmountChange();
+  amountEl.focus();
+  // Refresh balance for next transaction
+  loadCustomer();
+});
+
+onAuthStateChanged(auth, (u) => {
+  if (!u) { window.location.replace('index.html'); return; }
+  setPmButtonStyles();
+  loadCustomer();
+});
+</script>
+</body>
+</html>

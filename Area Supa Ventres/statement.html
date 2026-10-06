@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Customer Statement — Area Supa Ventures</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      'brand-gold': '#C59A3F', 'brand-gold-dark': '#B08632',
+      'brand-charcoal': '#212121', 'brand-bg': '#F8F6F2',
+      'brand-success': '#1B7F4B', 'brand-danger': '#B93838',
+    },
+    fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] },
+  }},
+};
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { user-select: none; background: #F8F6F2; }
+  input, button, a { user-select: auto; }
+  ::-webkit-scrollbar { display: none; } * { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .skeleton {
+    background: linear-gradient(90deg,#e7e5e4 0%,#f5f4f2 50%,#e7e5e4 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+  }
+  .skeleton-dark {
+    background: linear-gradient(90deg,#2b2a27 0%,#3a3833 50%,#2b2a27 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+
+  .fade-up { animation: fadeUp 400ms ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .period-pill { transition: all 150ms ease; white-space: nowrap; }
+
+  /* ---------- Print layout: A4 statement ---------- */
+  .print-only { display: none; }
+  .screen-only { display: block; }
+
+  @media print {
+    @page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+
+    html, body {
+      background: #fff !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .screen-only, header, .bottom-nav-root, button { display: none !important; }
+    .print-only { display: block !important; }
+
+    main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+
+    .statement-card {
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      background: #fff !important;
+    }
+
+    .print-header { display: block !important; margin-bottom: 10mm; }
+    .print-footer { display: block !important; margin-top: 10mm; padding-top: 6mm; border-top: 1px solid #ccc; }
+
+    .print-table th,
+    .print-table td { border-color: #999 !important; }
+
+    .no-break { page-break-inside: avoid; }
+    tr { page-break-inside: avoid; }
+
+    /* Force pure black text in print */
+    * { color: #000 !important; }
+    .print-accent { color: #7a5a15 !important; }
+  }
+</style>
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen">
+
+<!-- ============ SCREEN HEADER ============ -->
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200 screen-only">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a id="backBtn" href="customers.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">Statement</h1>
+        <p id="subHeader" class="text-[11px] text-stone-500 truncate">Loading…</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-1">
+      <button id="shareBtn" type="button" aria-label="Share"
+              class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-share-nodes text-[14px]"></i>
+      </button>
+      <button id="pdfBtn" type="button" aria-label="Download PDF"
+              class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-file-pdf text-[14px]"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN ============ -->
+<main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-24">
+
+  <!-- Error banner -->
+  <div id="loadError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3 screen-only">
+    <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-red-800">Couldn’t generate statement</p>
+      <p id="loadErrorMsg" class="text-[12px] text-red-700 mt-0.5">Check your connection and retry.</p>
+      <button id="retryBtn" type="button"
+              class="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-800 hover:text-red-900 underline underline-offset-2">
+        <i class="fa-solid fa-rotate-right text-[11px]"></i> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ Period selector (screen) ============ -->
+  <section class="mb-5 fade-up screen-only">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 ml-1 flex items-center gap-2">
+      <i class="fa-regular fa-calendar text-[10px]"></i>
+      <span>Statement period</span>
+    </h2>
+    <div class="flex flex-wrap items-center gap-2">
+      <button data-period="thismonth" class="period-pill shrink-0 px-3.5 py-2 rounded-full text-[12px] font-semibold">This month</button>
+      <button data-period="lastmonth" class="period-pill shrink-0 px-3.5 py-2 rounded-full text-[12px] font-semibold">Last month</button>
+      <button data-period="last3" class="period-pill shrink-0 px-3.5 py-2 rounded-full text-[12px] font-semibold">Last 3 months</button>
+      <button data-period="year" class="period-pill shrink-0 px-3.5 py-2 rounded-full text-[12px] font-semibold">This year</button>
+      <button data-period="all" class="period-pill shrink-0 px-3.5 py-2 rounded-full text-[12px] font-semibold">All time</button>
+      <button data-period="custom" class="period-pill shrink-0 px-3.5 py-2 rounded-full text-[12px] font-semibold">
+        <i class="fa-solid fa-sliders text-[10px] mr-1"></i> Custom
+      </button>
+    </div>
+
+    <!-- Custom range -->
+    <div id="customRange" class="hidden mt-3 rounded-xl bg-white border border-stone-200 p-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="fromInput" class="block text-[11px] font-medium text-stone-600 mb-1">From</label>
+          <input id="fromInput" type="date"
+                 class="w-full px-3 py-2 bg-[#FCFCF9] border border-stone-200 rounded-lg text-[13px] outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold" />
+        </div>
+        <div>
+          <label for="toInput" class="block text-[11px] font-medium text-stone-600 mb-1">To</label>
+          <input id="toInput" type="date"
+                 class="w-full px-3 py-2 bg-[#FCFCF9] border border-stone-200 rounded-lg text-[13px] outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold" />
+        </div>
+      </div>
+      <button id="applyCustom" type="button"
+              class="mt-3 w-full py-2.5 bg-[#212121] hover:bg-black text-white text-[12.5px] font-semibold rounded-lg">
+        Apply range
+      </button>
+    </div>
+
+    <!-- Active range label -->
+    <p id="activeRange" class="text-[11.5px] text-stone-500 mt-2 ml-1">
+      <i class="fa-regular fa-clock mr-1"></i> <span class="skeleton inline-block w-44 h-3 align-middle"></span>
+    </p>
+  </section>
+
+  <!-- ============ PRINT-ONLY HEADER ============ -->
+  <div class="print-header print-only">
+    <table style="width: 100%; border-bottom: 2px solid #C59A3F; padding-bottom: 12px;">
+      <tr>
+        <td style="vertical-align: middle;">
+          <table>
+            <tr>
+              <td style="padding-right: 12px; vertical-align: middle;">
+                <img src="logo-b.png" alt="Area Supa Ventures"
+                     style="width: 56px; height: 56px; object-fit: contain;" />
+              </td>
+              <td style="vertical-align: middle;">
+                <div class="print-accent" style="font-size: 20px; font-weight: 800; letter-spacing: -0.01em;">Area Supa Ventures</div>
+                <div style="font-size: 10.5px; color: #555; margin-top: 2px;">Nyame Ne Hene · Collector App</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td style="text-align: right; vertical-align: middle;">
+          <div style="font-size: 13px; font-weight: 700;">SAVINGS STATEMENT</div>
+          <div style="font-size: 10.5px; color: #444; margin-top: 3px;">Generated: <span id="printGeneratedAt">—</span></div>
+          <div style="font-size: 10.5px; color: #444; margin-top: 2px;">By: <span id="printGeneratedBy">—</span></div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ============ STATEMENT CARD ============ -->
+  <section class="rounded-2xl bg-white border border-stone-200 p-5 sm:p-7 mb-5 statement-card fade-up">
+
+    <!-- Customer + period -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-5 border-b border-stone-200 no-break">
+      <div>
+        <p class="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-400 mb-1.5">Customer</p>
+        <p id="custName" class="text-[15px] font-bold text-stone-900">
+          <span class="skeleton inline-block w-40 h-4 align-middle"></span>
+        </p>
+        <p id="custAcct" class="text-[12px] font-mono text-stone-600 mt-1">
+          <span class="skeleton inline-block w-28 h-3 align-middle"></span>
+        </p>
+        <p id="custPhone" class="text-[12px] text-stone-500 mt-0.5">
+          <span class="skeleton inline-block w-32 h-3 align-middle"></span>
+        </p>
+      </div>
+      <div class="sm:text-right">
+        <p class="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-400 mb-1.5">Statement period</p>
+        <p id="periodLine" class="text-[14px] font-bold text-stone-900">
+          <span class="skeleton inline-block w-44 h-4 align-middle"></span>
+        </p>
+        <p id="periodMeta" class="text-[12px] text-stone-500 mt-1">
+          <span class="skeleton inline-block w-28 h-3 align-middle"></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Opening / closing balance -->
+    <div class="grid grid-cols-2 gap-4 py-5 border-b border-stone-200 no-break">
+      <div>
+        <p class="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-400 mb-1.5">Opening balance</p>
+        <p id="openingBalance" class="text-[17px] font-bold text-stone-900 tabular-nums">
+          <span class="skeleton inline-block w-32 h-5 align-middle"></span>
+        </p>
+      </div>
+      <div class="text-right">
+        <p class="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-1.5">Closing balance</p>
+        <p id="closingBalance" class="text-[17px] font-extrabold text-brand-gold tabular-nums">
+          <span class="skeleton inline-block w-32 h-5 align-middle"></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Summary strip -->
+    <div class="grid grid-cols-3 gap-2 py-5 border-b border-stone-200 no-break">
+      <div class="text-center">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 mb-1">Deposits</p>
+        <p id="sumDeposits" class="text-[14px] font-bold text-stone-900 tabular-nums">
+          <span class="skeleton inline-block w-20 h-4 align-middle"></span>
+        </p>
+      </div>
+      <div class="text-center border-x border-stone-100">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-red-600 mb-1">Withdrawals</p>
+        <p id="sumWithdrawals" class="text-[14px] font-bold text-stone-900 tabular-nums">
+          <span class="skeleton inline-block w-20 h-4 align-middle"></span>
+        </p>
+      </div>
+      <div class="text-center">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-stone-500 mb-1">Net movement</p>
+        <p id="sumNet" class="text-[14px] font-bold text-stone-900 tabular-nums">
+          <span class="skeleton inline-block w-20 h-4 align-middle"></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="pt-5">
+      <p class="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-400 mb-3">Transaction detail</p>
+
+      <div id="txContainer">
+        <!-- Skeleton rows -->
+        <div class="space-y-3">
+          <div class="skeleton h-4 w-full"></div>
+          <div class="skeleton h-4 w-5/6"></div>
+          <div class="skeleton h-4 w-4/6"></div>
+          <div class="skeleton h-4 w-full"></div>
+          <div class="skeleton h-4 w-3/6"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collector footer signature (print only) -->
+    <div class="print-footer print-only">
+      <table style="width: 100%; font-size: 10.5px; color: #333;">
+        <tr>
+          <td style="vertical-align: bottom; padding-right: 12px;">
+            <div style="border-top: 1px solid #999; padding-top: 4px; margin-top: 24px;">Authorized signature</div>
+          </td>
+          <td style="vertical-align: bottom; padding-left: 12px; text-align: right;">
+            <div>Generated by <strong id="printCollector">—</strong></div>
+            <div style="margin-top: 2px; color: #666;">Area Supa Ventures · Collector App</div>
+          </td>
+        </tr>
+      </table>
+      <p style="font-size: 9.5px; color: #777; text-align: center; margin-top: 8mm;">
+        This statement is a computer-generated record of transactions held on your susu account.
+        Contact the administrator if any entry is incorrect.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ ACTION BUTTONS (screen) ============ -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 gap-3 fade-up screen-only">
+    <button id="shareBtn2" type="button"
+            class="flex items-center justify-center gap-2 py-3.5 bg-white border border-stone-300 hover:bg-stone-50 text-stone-900 text-[13px] font-semibold rounded-xl shadow-sm transition-all">
+      <i class="fa-solid fa-share-nodes text-brand-gold"></i> Share via WhatsApp
+    </button>
+    <button id="pdfBtn2" type="button"
+            class="flex items-center justify-center gap-2 py-3.5 bg-[#212121] hover:bg-black text-white text-[13px] font-semibold rounded-xl shadow transition-all">
+      <i class="fa-solid fa-file-pdf"></i> Download PDF
+    </button>
+  </section>
+
+  <!-- Footer note (screen) -->
+  <p class="text-[10.5px] text-stone-400 text-center mt-6 screen-only">
+    Statement generated on <span id="generatedAt">—</span>
+  </p>
+</main>
+
+<!-- ============================== SCRIPT ============================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore,
+  doc, collection, query, where, orderBy, getDocs, getDoc, Timestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { mountBottomNav } from './components/bottom-nav.js';
+mountBottomNav('customers');
+
+/* ---------- Firebase ---------- */
+const app = initializeApp({
+  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
+  authDomain: "area-supa-ventures.firebaseapp.com",
+  projectId: "area-supa-ventures",
+  storageBucket: "area-supa-ventures.firebasestorage.app",
+  messagingSenderId: "339989502774",
+  appId: "1:339989502774:web:6cbf99587d4317af0a7197"
+});
+const auth = getAuth(app);
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch { db = getFirestore(app); }
+
+/* ---------- Config ---------- */
+const COMPANY_NAME = 'Area Supa Ventures';
+const COMPANY_PHONE = '+233 24 000 0000';   // ← change to real
+
+/* ---------- Refs ---------- */
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const customerId = params.get('id');
+if (!customerId) window.location.replace('customers.html');
+
+const backBtn = $('backBtn'), subHeader = $('subHeader');
+const loadError = $('loadError'), loadErrorMsg = $('loadErrorMsg'), retryBtn = $('retryBtn');
+
+const periodPills = document.querySelectorAll('.period-pill');
+const customRange = $('customRange');
+const fromInput = $('fromInput'), toInput = $('toInput'), applyCustomBtn = $('applyCustom');
+const activeRangeEl = $('activeRange');
+
+const custName = $('custName'), custAcct = $('custAcct'), custPhone = $('custPhone');
+const periodLine = $('periodLine'), periodMeta = $('periodMeta');
+const openingBalance = $('openingBalance'), closingBalance = $('closingBalance');
+const sumDeposits = $('sumDeposits'), sumWithdrawals = $('sumWithdrawals'), sumNet = $('sumNet');
+const txContainer = $('txContainer');
+const generatedAt = $('generatedAt');
+const shareBtn = $('shareBtn'), shareBtn2 = $('shareBtn2');
+const pdfBtn = $('pdfBtn'), pdfBtn2 = $('pdfBtn2');
+
+const printGeneratedAt = $('printGeneratedAt'), printGeneratedBy = $('printGeneratedBy'), printCollector = $('printCollector');
+
+/* ---------- State ---------- */
+let currentUser = null;
+let customer = null;
+let currentPeriod = 'thismonth';
+let range = { start: null, end: null, label: '', code: '' };
+let tx = [];
+
+/* ---------- Helpers ---------- */
+function formatGHS(n) { const v = Number(n)||0; return v.toLocaleString('en-GH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function round2(n) { return Math.round(Number(n)*100)/100; }
+function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function tsToDate(v){ if(!v) return null; if(v.toDate) return v.toDate(); if(v instanceof Date) return v; return new Date(v); }
+function ymd(d){ return new Date(d).toISOString().slice(0,10); }
+function parseYmdLocal(s){ const [y,m,dd] = s.split('-').map(Number); return new Date(y, m-1, dd); }
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function endOfDay(d){ const x = new Date(d); x.setHours(23,59,59,999); return x; }
+function fmtDateShort(d){ return d.toLocaleDateString('en-GB',{day:'2-digit', month:'short'}); }
+function fmtDateFull(d){ return d.toLocaleDateString('en-GB',{day:'2-digit', month:'short', year:'numeric'}); }
+function fmtTime(d){ return d.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'}); }
+
+/* ---------- Period computation ---------- */
+function computeRange(period) {
+  const now = new Date();
+  switch (period) {
+    case 'thismonth': {
+      const s = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { start: startOfDay(s), end: endOfDay(now),
+               label: now.toLocaleDateString('en-GB',{month:'long', year:'numeric'}),
+               code: 'thismonth' };
+    }
+    case 'lastmonth': {
+      const s = new Date(now.getFullYear(), now.getMonth()-1, 1);
+      const e = new Date(now.getFullYear(), now.getMonth(), 0); // last day of prev month
+      return { start: startOfDay(s), end: endOfDay(e),
+               label: s.toLocaleDateString('en-GB',{month:'long', year:'numeric'}),
+               code: 'lastmonth' };
+    }
+    case 'last3': {
+      const s = new Date(now.getFullYear(), now.getMonth()-2, 1);
+      return { start: startOfDay(s), end: endOfDay(now),
+               label: `${fmtDateFull(s)} – ${fmtDateFull(now)}`,
+               code: 'last3' };
+    }
+    case 'year': {
+      const s = new Date(now.getFullYear(), 0, 1);
+      return { start: startOfDay(s), end: endOfDay(now),
+               label: `Year ${now.getFullYear()}`,
+               code: 'year' };
+    }
+    case 'all':
+      return { start: null, end: null,
+               label: 'All time',
+               code: 'all' };
+    case 'custom': {
+      const s = fromInput.value ? startOfDay(parseYmdLocal(fromInput.value)) : startOfDay(new Date());
+      const e = toInput.value ? endOfDay(parseYmdLocal(toInput.value)) : endOfDay(new Date());
+      return { start: s, end: e,
+               label: `${fmtDateFull(s)} – ${fmtDateFull(e)}`,
+               code: 'custom' };
+    }
+    default:
+      return computeRange('thismonth');
+  }
+}
+
+function setActivePill() {
+  periodPills.forEach(b => {
+    const active = b.getAttribute('data-period') === currentPeriod;
+    b.className = 'period-pill shrink-0 px-3.5 py-2 rounded-full text-[12px] font-semibold ' + (
+      active
+        ? 'bg-[#212121] text-white shadow'
+        : 'bg-white border border-stone-200 text-stone-600 hover:text-stone-900'
+    );
+  });
+  customRange.classList.toggle('hidden', currentPeriod !== 'custom');
+}
+
+/* ---------- Error handling ---------- */
+function showError(msg) { loadErrorMsg.textContent = msg || 'Check your connection and retry.'; loadError.classList.remove('hidden'); }
+function hideError() { loadError.classList.add('hidden'); }
+
+/* ---------- Load + render ---------- */
+async function loadStatement() {
+  hideError();
+
+  range = computeRange(currentPeriod);
+  activeRangeEl.innerHTML = `<i class="fa-regular fa-clock mr-1"></i> ${escapeHtml(range.label)}`;
+
+  // Reset to skeletons
+  [custName, custAcct, custPhone, periodLine, periodMeta, openingBalance, closingBalance,
+   sumDeposits, sumWithdrawals, sumNet].forEach(el => {
+    el.innerHTML = '<span class="skeleton inline-block w-32 h-4 align-middle"></span>';
+  });
+  txContainer.innerHTML = `
+    <div class="space-y-3">
+      <div class="skeleton h-4 w-full"></div>
+      <div class="skeleton h-4 w-5/6"></div>
+      <div class="skeleton h-4 w-4/6"></div>
+      <div class="skeleton h-4 w-full"></div>
+      <div class="skeleton h-4 w-3/6"></div>
+    </div>`;
+
+  try {
+    // 1. Customer doc
+    const cSnap = await getDoc(doc(db, 'customers', customerId));
+    if (!cSnap.exists()) {
+      showError('Customer not found.');
+      return;
+    }
+    customer = { id: cSnap.id, ...cSnap.data() };
+
+    // 2. Transactions in range
+    let txQuery;
+    if (range.code === 'all' || !range.start || !range.end) {
+      txQuery = query(
+        collection(db, 'transactions'),
+        where('customerId', '==', customerId),
+        orderBy('createdAt', 'asc')
+      );
+    } else {
+      txQuery = query(
+        collection(db, 'transactions'),
+        where('customerId', '==', customerId),
+        where('createdAt', '>=', Timestamp.fromDate(range.start)),
+        where('createdAt', '<=', Timestamp.fromDate(range.end)),
+        orderBy('createdAt', 'asc')
+      );
+    }
+    const txSnap = await getDocs(txQuery);
+    tx = txSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    renderStatement();
+  } catch (e) {
+    console.error('Statement load failed:', e);
+    if (String(e?.message || '').toLowerCase().includes('index')) {
+      showError('A Firestore index is being built for this query. Retry in ~1 minute.');
+    } else if (!navigator.onLine) {
+      showError('You’re offline. Reconnect to load the statement.');
+    } else {
+      showError('Could not load statement. Check your connection and retry.');
+    }
+  }
+}
+
+function renderStatement() {
+  // Customer
+  const name = customer.fullName || 'Customer';
+  custName.textContent = name;
+  custAcct.textContent = customer.accountNumber || '—';
+  custPhone.textContent = customer.phone || '—';
+
+  // Period
+  periodLine.textContent = range.label;
+  periodMeta.textContent = range.code === 'all'
+    ? `All transactions`
+    : `${range.start ? fmtDateFull(range.start) : ''} – ${range.end ? fmtDateFull(range.end) : ''}`;
+
+  // Opening / closing balance
+  let opening = 0, closing = 0;
+  let dep = 0, wd = 0;
+
+  if (tx.length === 0) {
+    opening = Number(customer.balance) || 0;
+    closing = opening;
+  } else {
+    const first = tx[0];
+    const firstNet = first.type === 'deposit' ? (Number(first.amount) || 0) : -(Number(first.amount) || 0);
+    opening = round2((Number(first.balanceAfter) || 0) - firstNet);
+
+    const last = tx[tx.length - 1];
+    closing = Number(last.balanceAfter) || 0;
+
+    for (const t of tx) {
+      const amt = Number(t.amount) || 0;
+      if (t.type === 'deposit') dep += amt;
+      else wd += amt;
+    }
+  }
+
+  openingBalance.textContent = `GH₵${formatGHS(opening)}`;
+  closingBalance.textContent = `GH₵${formatGHS(closing)}`;
+  sumDeposits.textContent = `+GH₵${formatGHS(dep)}`;
+  sumWithdrawals.textContent = `−GH₵${formatGHS(wd)}`;
+  const net = dep - wd;
+  sumNet.textContent = (net >= 0 ? '+' : '−') + `GH₵${formatGHS(Math.abs(net))}`;
+
+  // Transactions table
+  if (tx.length === 0) {
+    txContainer.innerHTML = `
+      <div class="py-10 text-center">
+        <i class="fa-solid fa-receipt text-3xl text-stone-300"></i>
+        <p class="mt-3 text-[13px] font-semibold text-stone-700">No transactions in this period</p>
+        <p class="text-[11.5px] text-stone-500 mt-1">Try a different date range.</p>
+      </div>`;
+  } else {
+    txContainer.innerHTML = `
+      <table class="w-full print-table" style="border-collapse: collapse; font-size: 12.5px;">
+        <thead>
+          <tr style="border-bottom: 1px solid #e5e3de;">
+            <th class="text-left py-2.5 font-semibold text-stone-500 text-[10.5px] uppercase tracking-wider">Date</th>
+            <th class="text-left py-2.5 font-semibold text-stone-500 text-[10.5px] uppercase tracking-wider">Description</th>
+            <th class="text-right py-2.5 font-semibold text-stone-500 text-[10.5px] uppercase tracking-wider">Amount</th>
+            <th class="text-right py-2.5 font-semibold text-stone-500 text-[10.5px] uppercase tracking-wider whitespace-nowrap">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tx.map((t, i) => {
+            const d = tsToDate(t.createdAt);
+            const dateStr = d ? fmtDateShort(d) : '—';
+            const timeStr = d ? fmtTime(d) : '';
+            const isDep = t.type === 'deposit';
+            const sign = isDep ? '+' : '−';
+            const amountColor = isDep ? 'text-emerald-600' : 'text-red-600';
+            const desc = isDep ? 'Deposit' : 'Withdrawal';
+            const method = t.paymentMethod === 'momo' ? ' · MoMo' : '';
+            const ref = t.reference ? `<span class="block text-[10px] text-stone-400 font-mono mt-0.5">${escapeHtml(t.reference)}</span>` : '';
+            const borderStyle = i < tx.length - 1 ? 'border-bottom: 1px solid #f1efea;' : '';
+            return `
+              <tr style="${borderStyle}">
+                <td class="py-2.5 align-top whitespace-nowrap" style="color: #333;">
+                  <span class="font-semibold text-stone-800">${dateStr}</span>
+                  <span class="block text-[10.5px] text-stone-400 mt-0.5">${timeStr}</span>
+                </td>
+                <td class="py-2.5 align-top">
+                  <span class="font-medium text-stone-800">${desc}${method}</span>
+                  ${ref}
+                </td>
+                <td class="py-2.5 align-top text-right whitespace-nowrap font-bold ${amountColor}" style="color: inherit;">
+                  ${sign}GH₵${formatGHS(t.amount)}
+                </td>
+                <td class="py-2.5 align-top text-right whitespace-nowrap font-semibold text-stone-700 tabular-nums">
+                  GH₵${formatGHS(t.balanceAfter)}
+                </td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // Footer
+  const now = new Date();
+  const collectorLabel = currentUser?.email || currentUser?.phoneNumber || '—';
+  generatedAt.textContent = `${fmtDateFull(now)} · ${fmtTime(now)}`;
+  printGeneratedAt.textContent = `${fmtDateFull(now)} · ${fmtTime(now)}`;
+  printGeneratedBy.textContent = collectorLabel;
+  printCollector.textContent = collectorLabel;
+}
+
+/* ---------- Period tab wiring ---------- */
+periodPills.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentPeriod = btn.getAttribute('data-period');
+    setActivePill();
+    if (currentPeriod === 'custom') {
+      if (!fromInput.value) {
+        const s = new Date(); s.setDate(1);
+        fromInput.value = ymd(s);
+      }
+      if (!toInput.value) toInput.value = ymd(new Date());
+      fromInput.focus();
+    } else {
+      loadStatement();
+    }
+  });
+});
+
+applyCustomBtn.addEventListener('click', () => {
+  if (!fromInput.value || !toInput.value) {
+    showError('Please pick both a start and end date.');
+    return;
+  }
+  if (new Date(fromInput.value) > new Date(toInput.value)) {
+    showError('Start date must be before end date.');
+    return;
+  }
+  loadStatement();
+});
+
+/* ---------- Share ---------- */
+function buildShareText() {
+  const lines = [];
+  lines.push(`${COMPANY_NAME}`);
+  lines.push(`Savings Statement`);
+  lines.push('');
+  lines.push(`Customer: ${customer.fullName || '—'}`);
+  lines.push(`Account:  ${customer.accountNumber || '—'}`);
+  lines.push(`Period:   ${range.label}`);
+  lines.push('');
+  lines.push(`Opening balance:  GH₵${openingBalance.textContent.replace('GH₵','')}`);
+  lines.push(`Total deposits:   ${sumDeposits.textContent}`);
+  lines.push(`Total withdrawals:${sumWithdrawals.textContent}`);
+  lines.push(`Closing balance:  GH₵${closingBalance.textContent.replace('GH₵','')}`);
+  lines.push('');
+  lines.push(`Generated ${fmtDateFull(new Date())} at ${fmtTime(new Date())}`);
+  lines.push(`Questions? Call ${COMPANY_PHONE}`);
+  return lines.join('\n');
+}
+
+async function shareStatement() {
+  if (!customer) return;
+  const text = buildShareText();
+
+  // Try native share first (mobile)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Statement — ${customer.fullName || ''}`,
+        text
+      });
+      return;
+    } catch (e) {
+      if (e?.name === 'AbortError') return; // user cancelled
+      // fall through to WhatsApp link
+    }
+  }
+
+  // Fallback: WhatsApp web link with prefilled text
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank', 'noopener');
+}
+
+shareBtn.addEventListener('click', shareStatement);
+shareBtn2.addEventListener('click', shareStatement);
+
+/* ---------- PDF (uses browser print → Save as PDF) ---------- */
+function downloadPDF() {
+  if (!customer) return;
+  // Print styles handle the A4 layout; browser offers "Save as PDF" in the print dialog.
+  window.print();
+}
+
+pdfBtn.addEventListener('click', downloadPDF);
+pdfBtn2.addEventListener('click', downloadPDF);
+
+retryBtn.addEventListener('click', loadStatement);
+
+/* ---------- Init ---------- */
+onAuthStateChanged(auth, async (u) => {
+  if (!u) { window.location.replace('index.html'); return; }
+  currentUser = u;
+
+  // Back button destination: if we know the customer, go to customer profile.
+  // Else fall back to customers list.
+  if (customerId) backBtn.href = `customer.html?id=${encodeURIComponent(customerId)}`;
+
+  // Honour URL params if provided
+  const urlFrom = params.get('from');
+  const urlTo = params.get('to');
+  const urlPeriod = params.get('period');
+  if (urlFrom || urlTo) {
+    currentPeriod = 'custom';
+    if (urlFrom) fromInput.value = urlFrom;
+    if (urlTo) toInput.value = urlTo;
+  } else if (urlPeriod && ['thismonth','lastmonth','last3','year','all'].includes(urlPeriod)) {
+    currentPeriod = urlPeriod;
+  }
+  setActivePill();
+
+  await loadStatement();
+});
+</script>
+
+</body>
+</html>
