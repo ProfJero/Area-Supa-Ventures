@@ -1,13 +1,15 @@
 // components/bottom-nav.js
 // Reusable bottom navigation for every page in the collector app.
+// Items with a `perm` are removed by session.js for roles without it.
 // Usage:  import { mountBottomNav } from './components/bottom-nav.js';
 //         mountBottomNav('home');
 
 const NAV_ITEMS = [
   { key: 'home',         label: 'Home',         icon: 'fa-solid fa-house',              href: 'dashboard.html' },
   { key: 'customers',    label: 'Customers',    icon: 'fa-solid fa-users',              href: 'customers.html' },
-  { key: 'transactions', label: 'Transactions', icon: 'fa-solid fa-right-left',         href: 'transactions.html' },
-  { key: 'reports',      label: 'Reports',      icon: 'fa-solid fa-chart-column',       href: 'reports.html' },
+  { key: 'transactions', label: 'Transactions', icon: 'fa-solid fa-right-left',         href: 'transactions.html', perm: 'transactions.view' },
+  { key: 'sms',          label: 'SMS',          icon: 'fa-solid fa-comment-sms',        href: 'sms.html',          perm: 'sms.send' },
+  { key: 'reports',      label: 'Reports',      icon: 'fa-solid fa-chart-column',       href: 'reports.html',      perm: 'reports.view' },
   { key: 'profile',      label: 'Profile',      icon: 'fa-solid fa-circle-user',        href: 'profile.html' }
 ];
 
@@ -29,7 +31,7 @@ export function mountBottomNav(activeKey = 'home') {
 
   nav.innerHTML = `
     <div class="mx-auto max-w-2xl px-2">
-      <ul class="grid grid-cols-5">
+      <ul class="flex">
         ${NAV_ITEMS.map((item) => {
           const active = item.key === activeKey;
           const color  = active
@@ -37,8 +39,9 @@ export function mountBottomNav(activeKey = 'home') {
             : 'text-stone-400 hover:text-stone-700';
           const weight = active ? 'font-bold' : 'font-medium';
           const aria   = active ? 'aria-current="page"' : '';
+          const perm   = item.perm ? `data-perm="${item.perm}"` : '';
           return `
-            <li>
+            <li class="flex-1" ${perm}>
               <a href="${item.href}" ${aria}
                  class="flex flex-col items-center justify-center gap-1 py-3 transition-colors ${color}">
                 <i class="${item.icon} text-[18px]"></i>

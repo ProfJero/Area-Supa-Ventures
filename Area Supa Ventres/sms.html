@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>SMS messaging — Area Supa Ventures</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen bg-brand-bg">
+
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="dashboard.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">SMS messaging</h1>
+        <p id="subHeader" class="text-[11px] text-stone-500 truncate">Alerts, greetings and bulk messages</p>
+      </div>
+    </div>
+    <div id="headerActions" class="flex items-center gap-2"></div>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-28">
+
+  <!-- Wallet -->
+  <section class="mb-5 rounded-2xl bg-[#20201E] text-white p-5 relative overflow-hidden fade-up">
+    <div class="absolute -right-8 -top-8 w-32 h-32 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative flex items-center justify-between gap-4">
+      <div>
+        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold">SMS balance · ProfJero Connect</p>
+        <p class="mt-1 text-3xl font-extrabold tracking-tight"><span id="units"><span class="skeleton-dark inline-block w-20 h-7 align-middle"></span></span>
+          <span class="text-sm font-semibold text-stone-400">units</span></p>
+        <p id="unitsSub" class="text-[11px] text-stone-400 mt-0.5">1 unit = 1 SMS page to 1 person</p>
+      </div>
+      <button type="button" data-tab-go="billing" data-perm="sms.billing"
+              class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-brand-gold hover:bg-brand-goldHover text-[#1A1A18] text-[12px] font-bold rounded-xl">
+        <i class="fa-solid fa-cart-shopping text-[11px]"></i> Buy units
+      </button>
+    </div>
+    <div id="walletError" class="hidden relative mt-3 text-[12px] text-red-300"></div>
+  </section>
+
+  <!-- Tabs -->
+  <nav class="mb-5 flex gap-1 p-1 bg-white border border-stone-200 rounded-xl overflow-x-auto fade-up" role="tablist">
+    <button type="button" data-tab="send" class="tab-btn flex-1 whitespace-nowrap px-3 py-2 rounded-lg text-[12.5px] font-semibold">Send</button>
+    <button type="button" data-tab="auto" data-perm="sms.settings" class="tab-btn flex-1 whitespace-nowrap px-3 py-2 rounded-lg text-[12.5px] font-semibold">Automatic</button>
+    <button type="button" data-tab="history" class="tab-btn flex-1 whitespace-nowrap px-3 py-2 rounded-lg text-[12.5px] font-semibold">History</button>
+    <button type="button" data-tab="billing" data-perm="sms.billing" class="tab-btn flex-1 whitespace-nowrap px-3 py-2 rounded-lg text-[12.5px] font-semibold">Buy units</button>
+  </nav>
+
+  <!-- ===================== SEND ===================== -->
+  <section data-panel="send" class="space-y-5">
+    <div class="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+      <p class="section-title">1 · Who should receive it?</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="audienceChoices">
+        <label class="flex items-center gap-2 p-3 rounded-xl border border-stone-200 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/5 cursor-pointer text-[12.5px] font-semibold">
+          <input type="radio" name="audience" value="customers" checked class="text-brand-charcoal focus:ring-0" /> Chosen customers
+        </label>
+        <label data-perm="sms.settings" class="flex items-center gap-2 p-3 rounded-xl border border-stone-200 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/5 cursor-pointer text-[12.5px] font-semibold">
+          <input type="radio" name="audience" value="branch" class="text-brand-charcoal focus:ring-0" /> A branch
+        </label>
+        <label data-perm="sms.settings" class="flex items-center gap-2 p-3 rounded-xl border border-stone-200 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/5 cursor-pointer text-[12.5px] font-semibold">
+          <input type="radio" name="audience" value="all" class="text-brand-charcoal focus:ring-0" /> All customers
+        </label>
+      </div>
+
+      <div id="pickCustomers">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-stone-400 text-[13px]"></i>
+          <input id="custSearch" type="search" autocomplete="off" placeholder="Search name, phone or ASV-10001 to add"
+                 class="w-full pl-10 pr-3 py-3 bg-white border border-stone-200 rounded-xl text-[13.5px] outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold" />
+          <div id="custResults" class="hidden absolute z-20 inset-x-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-72 overflow-y-auto divide-y divide-stone-100"></div>
+        </div>
+        <div id="chosen" class="mt-3 flex flex-wrap gap-2"></div>
+      </div>
+
+      <div id="pickBranch" class="hidden">
+        <select id="branchSel" class="field-input"></select>
+      </div>
+      <p id="allNote" class="hidden text-[12px] text-stone-500">Every active customer with a phone number who has not opted out of SMS.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <p class="section-title">2 · Message</p>
+      <div>
+        <p class="text-[11px] text-stone-500 mb-1.5">Tap a field to insert it. Each customer gets their own value.</p>
+        <div id="fieldChips" class="flex flex-wrap gap-1.5"></div>
+      </div>
+      <textarea id="message" rows="5" maxlength="1600" class="field-input" placeholder="Dear {first_name}, ..."></textarea>
+      <div class="flex items-center justify-between text-[11px] text-stone-500">
+        <span id="msgCount">0 characters · 1 page</span>
+        <span id="msgWarn" class="text-amber-700"></span>
+      </div>
+      <div class="rounded-xl bg-stone-50 border border-stone-200 p-3">
+        <p class="text-[10.5px] font-semibold uppercase tracking-wide text-stone-400">Preview <span id="previewWho" class="normal-case font-medium tracking-normal"></span></p>
+        <p id="preview" class="mt-1 text-[13px] text-stone-800 whitespace-pre-wrap break-words">—</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <p class="section-title">3 · When</p>
+      <label class="flex items-center gap-2 text-[12.5px] text-stone-700">
+        <input id="scheduleOn" type="checkbox" class="rounded border-stone-300 text-brand-charcoal focus:ring-0" /> Schedule for later
+      </label>
+      <input id="scheduleAt" type="datetime-local" class="field-input hidden" />
+    </div>
+
+    <div id="estimateBox" class="hidden rounded-xl border px-4 py-3 text-[12.5px]"></div>
+    <div id="sendError" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12.5px] text-red-800"></div>
+    <div class="grid grid-cols-2 gap-3">
+      <button id="estimateBtn" type="button" class="btn-light py-3.5 text-sm"><i class="fa-solid fa-calculator text-[12px]"></i> Check cost</button>
+      <button id="sendBtn" type="button" class="btn-dark py-3.5 text-sm"><i class="fa-solid fa-paper-plane text-[12px]"></i> Send</button>
+    </div>
+  </section>
+
+  <!-- ===================== AUTOMATIC ===================== -->
+  <section data-panel="auto" class="hidden space-y-5">
+    <div class="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <p class="section-title">Sender ID</p>
+      <p class="text-[12px] text-stone-500">The name customers see as the sender. Request new Sender IDs in your ProfJero Connect dashboard (Messaging → Sender IDs).</p>
+      <select id="senderId" class="field-input"><option value="">Loading…</option></select>
+    </div>
+
+    <div id="autoTemplates" class="space-y-5"></div>
+
+    <div class="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <p class="section-title">Holidays &amp; occasions</p>
+        <button id="addOccasion" type="button" class="btn-light px-3 py-1.5 text-[12px]"><i class="fa-solid fa-plus text-[11px]"></i> Add</button>
+      </div>
+      <p class="text-[12px] text-stone-500">Sent automatically to all customers at 8:00 AM on the date each year. For holidays that move (Easter, Eid), update the date each year.</p>
+      <div id="occasions" class="space-y-3"></div>
+    </div>
+
+    <div id="autoError" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12.5px] text-red-800"></div>
+    <button id="saveAuto" type="button" class="btn-dark w-full py-3.5 text-sm"><i class="fa-solid fa-check text-[12px]"></i> Save SMS settings</button>
+  </section>
+
+  <!-- ===================== HISTORY ===================== -->
+  <section data-panel="history" class="hidden">
+    <div id="historyList" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden"></div>
+    <div class="mt-4 text-center"><button id="historyMore" type="button" class="hidden btn-light px-5 py-2.5 text-[12.5px]">Load more</button></div>
+  </section>
+
+  <!-- ===================== BILLING ===================== -->
+  <section data-panel="billing" class="hidden space-y-5">
+    <div id="paymentNotice" class="hidden rounded-xl border px-4 py-3 text-[12.5px]"></div>
+    <div class="bg-white rounded-2xl border border-stone-200 p-5">
+      <p class="section-title">Packages</p>
+      <p id="unitPrice" class="text-[12px] text-stone-500 mt-1"></p>
+      <div id="packages" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="skeleton h-20"></div><div class="skeleton h-20"></div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <p class="section-title">Custom amount</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="field-label" for="customUnits">Units</label>
+          <input id="customUnits" type="number" min="50" step="1" class="field-input" placeholder="e.g. 2000" />
+          <p id="customPrice" class="field-hint"></p>
+        </div>
+        <div>
+          <label class="field-label" for="payMethod">Pay with</label>
+          <select id="payMethod" class="field-input">
+            <option value="">Choose at checkout</option>
+            <option value="mobile_money">Mobile money</option>
+            <option value="card">Card</option>
+          </select>
+        </div>
+      </div>
+      <button id="buyCustom" type="button" class="btn-dark w-full py-3 text-sm"><i class="fa-solid fa-lock text-[12px]"></i> Continue to secure checkout</button>
+      <p class="text-[11px] text-stone-400 text-center">You’ll pay on ProfJero Connect’s checkout page. Units are added automatically after payment.</p>
+    </div>
+    <div>
+      <h2 class="text-sm font-bold text-stone-900 tracking-tight mb-3">Purchases</h2>
+      <div id="payments" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden"></div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module" src="js/sms.js"></script>
+</body>
+</html>

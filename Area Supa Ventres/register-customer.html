@@ -6,26 +6,20 @@
 <meta name="theme-color" content="#F8F6F2" />
 <title>Register Customer — Area Supa Ventures</title>
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        'brand-gold':      '#C59A3F',
-        'brand-gold-dark': '#B08632',
-        'brand-charcoal':  '#212121',
-        'brand-bg':        '#F8F6F2',
-      },
-      fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-      },
-    },
-  },
-};
-</script>
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
 
 <style>
   html, body { -webkit-tap-highlight-color: transparent; }
@@ -88,7 +82,6 @@ tailwind.config = {
 <!-- ================= HEADER ================= -->
 <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-
     <div class="flex items-center gap-3 min-w-0">
       <a href="customers.html" aria-label="Cancel"
          class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
@@ -96,14 +89,8 @@ tailwind.config = {
       </a>
       <div class="min-w-0">
         <h1 class="text-[15px] font-bold text-stone-900 truncate">Register customer</h1>
-        <p id="stepLabel" class="text-[11px] text-stone-500 truncate">Step 1 of 2 · Personal details</p>
+        <p class="text-[11px] text-stone-500 truncate">Bio data, contact, branch and next of kin</p>
       </div>
-    </div>
-
-    <!-- Step dots -->
-    <div class="flex items-center gap-1.5 shrink-0">
-      <span id="stepDot1" class="w-2 h-2 rounded-full bg-brand-gold"></span>
-      <span id="stepDot2" class="w-2 h-2 rounded-full bg-stone-300"></span>
     </div>
   </div>
 </header>
@@ -111,428 +98,42 @@ tailwind.config = {
 <!-- ================= MAIN ================= -->
 <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-32">
 
-  <!-- Error / success banner -->
-  <div id="errorBox" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+  <div id="errorBox" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3" role="alert">
     <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
     <div class="flex-1 min-w-0">
       <p id="errorMsg" class="text-sm font-semibold text-red-800">Something went wrong.</p>
+      <a id="dupLink" href="#" class="hidden mt-1 text-[12px] font-semibold text-red-800 underline">Open existing customer</a>
+      <button id="dupContinue" type="button" class="hidden mt-1 ml-3 text-[12px] font-semibold text-red-800 underline">It’s a different person — register anyway</button>
     </div>
   </div>
 
-  <form id="customerForm" novalidate>
-
-    <!-- ============ STEP 1: Personal details ============ -->
-    <section id="step1" class="space-y-4 fade-up">
-
-      <!-- Account number preview -->
-      <div class="rounded-2xl bg-[#20201E] text-white p-5 relative overflow-hidden">
-        <div class="absolute -right-6 -top-6 w-28 h-28 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="relative">
-          <div class="flex items-center gap-2 text-stone-400 text-[11px] font-medium uppercase tracking-wider">
-            <i class="fa-solid fa-hashtag text-[10px]"></i>
-            Account number
-          </div>
-          <p class="mt-1.5 text-2xl font-bold font-mono tracking-tight text-brand-gold">Auto-generated</p>
-          <p class="mt-1 text-[11px] text-stone-400">
-            We’ll assign the next available ASV number when you save.
-          </p>
+  <form id="customerForm" class="space-y-5 fade-up" novalidate>
+    <!-- Account number preview -->
+    <div class="rounded-2xl bg-[#20201E] text-white p-5 relative overflow-hidden">
+      <div class="absolute -right-6 -top-6 w-28 h-28 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="relative">
+        <div class="flex items-center gap-2 text-stone-400 text-[11px] font-medium uppercase tracking-wider">
+          <i class="fa-solid fa-hashtag text-[10px]"></i> Customer ID
         </div>
+        <p class="mt-1.5 text-2xl font-bold font-mono tracking-tight text-brand-gold">ASV-1XXXX</p>
+        <p class="mt-1 text-[11px] text-stone-400">The next customer ID (ASV-10001, ASV-10002, …) is assigned when you save.</p>
       </div>
+    </div>
 
-      <!-- Full name -->
-      <div>
-        <label class="field-label" for="fullName">Full name <span class="text-red-500">*</span></label>
-        <input id="fullName" class="field-input" type="text" autocomplete="name"
-               placeholder="e.g. Ama Boateng" required />
-        <p class="field-error" id="fullNameError">Please enter the customer’s full name.</p>
-      </div>
+    <div id="formFields"></div>
 
-      <!-- Phone -->
-      <div>
-        <label class="field-label" for="phone">Phone number <span class="text-red-500">*</span></label>
-        <input id="phone" class="field-input" type="tel" autocomplete="tel"
-               placeholder="024 555 0192" required />
-        <p class="field-hint">Ghanaian number. Digits only, spaces are fine.</p>
-        <p class="field-error" id="phoneError">Please enter a valid phone number.</p>
-      </div>
+    <label id="welcomeRow" class="hidden flex items-center gap-2 text-[12.5px] text-stone-700 px-1">
+      <input id="sendWelcome" type="checkbox" checked class="w-4 h-4 rounded border-stone-300 text-brand-charcoal focus:ring-0" />
+      Send welcome SMS with their customer ID
+    </label>
 
-      <!-- Email -->
-      <div>
-        <label class="field-label" for="email">Email address</label>
-        <input id="email" class="field-input" type="email" autocomplete="email"
-               placeholder="customer@example.com (optional)" />
-        <p class="field-error" id="emailError">That email doesn’t look right.</p>
-      </div>
-
-      <!-- Continue -->
-      <div class="pt-3">
-        <button id="continueBtn" type="button"
-                class="w-full py-3.5 bg-[#212121] hover:bg-black active:scale-[0.99] text-white text-sm font-semibold rounded-xl shadow transition-all flex items-center justify-center gap-2">
-          <span>Continue</span>
-          <i class="fa-solid fa-arrow-right text-[12px]"></i>
-        </button>
-        <p class="text-center text-[10.5px] text-stone-500 mt-3 tracking-tight">
-          Next: next of kin <span class="text-stone-300">·</span> digital address <span class="text-stone-300">·</span> notes
-        </p>
-      </div>
-    </section>
-
-    <!-- ============ STEP 2: Additional details ============ -->
-    <section id="step2" class="hidden space-y-4 fade-up">
-
-      <!-- Review block -->
-      <div class="rounded-2xl bg-white border border-stone-200 p-5">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-2 flex items-center gap-2">
-          <i class="fa-solid fa-circle-check text-[10px]"></i>
-          <span>Personal details</span>
-        </p>
-        <div class="space-y-1.5 text-[12.5px]">
-          <div class="flex items-start justify-between gap-3">
-            <span class="text-stone-500">Name</span>
-            <span id="reviewName" class="font-semibold text-stone-900 text-right">—</span>
-          </div>
-          <div class="flex items-start justify-between gap-3">
-            <span class="text-stone-500">Phone</span>
-            <span id="reviewPhone" class="font-semibold text-stone-900 text-right">—</span>
-          </div>
-          <div id="reviewEmailRow" class="flex items-start justify-between gap-3">
-            <span class="text-stone-500">Email</span>
-            <span id="reviewEmail" class="font-semibold text-stone-900 text-right">—</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Next of kin name -->
-      <div>
-        <label class="field-label" for="nextOfKin">Next of kin <span class="text-red-500">*</span></label>
-        <input id="nextOfKin" class="field-input" type="text"
-               placeholder="Full name of next of kin" required />
-        <p class="field-error" id="nextOfKinError">Please enter the next of kin’s name.</p>
-      </div>
-
-      <!-- Next of kin phone -->
-      <div>
-        <label class="field-label" for="nextOfKinPhone">Next of kin phone <span class="text-red-500">*</span></label>
-        <input id="nextOfKinPhone" class="field-input" type="tel"
-               placeholder="024 000 0000" required />
-        <p class="field-error" id="nextOfKinPhoneError">Please enter a valid phone number.</p>
-      </div>
-
-      <!-- Digital address -->
-      <div>
-        <label class="field-label" for="digitalAddress">Digital address</label>
-        <input id="digitalAddress" class="field-input" type="text"
-               placeholder="e.g. GA-123-4567 (optional)" />
-      </div>
-
-      <!-- Notes -->
-      <div>
-        <label class="field-label" for="notes">Notes</label>
-        <textarea id="notes" class="field-input" rows="3"
-                  placeholder="Any additional information (optional)"></textarea>
-      </div>
-
-      <!-- Actions -->
-      <div class="pt-3 grid grid-cols-2 gap-3">
-        <button id="backBtn" type="button"
-                class="py-3.5 bg-white border border-stone-300 hover:bg-stone-50 active:scale-[0.99] text-stone-900 text-sm font-semibold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
-          <i class="fa-solid fa-arrow-left text-[12px]"></i>
-          <span>Back</span>
-        </button>
-        <button id="submitBtn" type="submit"
-                class="py-3.5 bg-[#212121] hover:bg-black active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow transition-all flex items-center justify-center gap-2">
-          <span id="submitLabel">Save Customer</span>
-          <i id="submitSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-[12px]"></i>
-        </button>
-      </div>
-    </section>
-
+    <button id="submitBtn" type="submit"
+            class="w-full py-3.5 bg-[#212121] hover:bg-black active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow transition-all flex items-center justify-center gap-2">
+      <i class="fa-solid fa-user-plus text-[12px]"></i> <span>Save Customer</span>
+    </button>
   </form>
 </main>
 
-<!-- ================= SCRIPT ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-  getFirestore,
-  doc,
-  collection,
-  query,
-  where,
-  limit,
-  getDocs,
-  runTransaction,
-  serverTimestamp,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* ---------- Firebase ---------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
-  authDomain: "area-supa-ventures.firebaseapp.com",
-  projectId: "area-supa-ventures",
-  storageBucket: "area-supa-ventures.firebasestorage.app",
-  messagingSenderId: "339989502774",
-  appId: "1:339989502774:web:6cbf99587d4317af0a7197",
-  measurementId: "G-WDJCSK78QE"
-};
-
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-let db;
-try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-  });
-} catch (e) {
-  console.warn('Persistent cache not available:', e);
-  db = getFirestore(app);
-}
-
-/* ---------- Refs ---------- */
-const $ = (id) => document.getElementById(id);
-
-const step1         = $('step1');
-const step2         = $('step2');
-const stepLabel     = $('stepLabel');
-const stepDot1      = $('stepDot1');
-const stepDot2      = $('stepDot2');
-
-const fullNameEl    = $('fullName');
-const phoneEl       = $('phone');
-const emailEl       = $('email');
-const nextOfKinEl   = $('nextOfKin');
-const nokPhoneEl    = $('nextOfKinPhone');
-const digitalEl     = $('digitalAddress');
-const notesEl       = $('notes');
-
-const reviewName    = $('reviewName');
-const reviewPhone   = $('reviewPhone');
-const reviewEmail   = $('reviewEmail');
-const reviewEmailRow= $('reviewEmailRow');
-
-const continueBtn   = $('continueBtn');
-const backBtn       = $('backBtn');
-const submitBtn     = $('submitBtn');
-const submitLabel   = $('submitLabel');
-const submitSpinner = $('submitSpinner');
-
-const errorBox      = $('errorBox');
-const errorMsg      = $('errorMsg');
-
-/* ---------- Helpers ---------- */
-function normalizePhone(raw) {
-  return String(raw || '').replace(/\D/g, '');
-}
-function isValidGhanaPhone(digits) {
-  // 10 digits starting with 0, or 12 digits starting with 233
-  if (digits.length === 10 && digits.startsWith('0')) return true;
-  if (digits.length === 12 && digits.startsWith('233')) return true;
-  if (digits.length === 9) return true; // some users type without leading 0
-  return false;
-}
-function isValidEmail(v) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-function showFieldError(id, show = true) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.toggle('show', show);
-}
-function clearAllErrors() {
-  ['fullNameError','phoneError','emailError','nextOfKinError','nextOfKinPhoneError']
-    .forEach((id) => showFieldError(id, false));
-  errorBox.classList.add('hidden');
-}
-function showBanner(msg) {
-  errorMsg.textContent = msg;
-  errorBox.classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* ---------- Step transitions ---------- */
-function goToStep1() {
-  step2.classList.add('hidden');
-  step1.classList.remove('hidden');
-  stepLabel.textContent = 'Step 1 of 2 · Personal details';
-  stepDot1.className = 'w-2 h-2 rounded-full bg-brand-gold';
-  stepDot2.className = 'w-2 h-2 rounded-full bg-stone-300';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function goToStep2() {
-  // Validate step 1 first
-  clearAllErrors();
-  let ok = true;
-
-  const name = fullNameEl.value.trim();
-  const phoneDigits = normalizePhone(phoneEl.value);
-  const email = emailEl.value.trim();
-
-  if (!name || name.length < 3) { showFieldError('fullNameError', true); ok = false; }
-  if (!phoneDigits || !isValidGhanaPhone(phoneDigits)) { showFieldError('phoneError', true); ok = false; }
-  if (email && !isValidEmail(email)) { showFieldError('emailError', true); ok = false; }
-
-  if (!ok) {
-    showBanner('Please fix the highlighted fields before continuing.');
-    return;
-  }
-
-  // Review
-  reviewName.textContent  = name;
-  reviewPhone.textContent = phoneEl.value.trim();
-  if (email) {
-    reviewEmailRow.style.display = '';
-    reviewEmail.textContent = email;
-  } else {
-    reviewEmailRow.style.display = 'none';
-  }
-
-  step1.classList.add('hidden');
-  step2.classList.remove('hidden');
-  stepLabel.textContent = 'Step 2 of 2 · Additional details';
-  stepDot1.className = 'w-2 h-2 rounded-full bg-stone-300';
-  stepDot2.className = 'w-2 h-2 rounded-full bg-brand-gold';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-continueBtn.addEventListener('click', goToStep2);
-backBtn.addEventListener('click', goToStep1);
-
-/* ---------- Account number generation (atomic) ---------- */
-const ACCOUNT_NUMBER_START  = 100000;   // First customer gets ASV-100001
-const ACCOUNT_NUMBER_PREFIX = 'ASV-';
-const ACCOUNT_NUMBER_PAD    = 6;
-
-async function reserveNextAccountNumber() {
-  const counterRef = doc(db, 'counters', 'customers');
-  return await runTransaction(db, async (tx) => {
-    const snap = await tx.get(counterRef);
-    const stored  = snap.exists() ? Number(snap.data().lastNumber) || 0 : 0;
-    const current = Math.max(ACCOUNT_NUMBER_START, stored);
-    const next    = current + 1;
-    tx.set(counterRef, { lastNumber: next, updatedAt: serverTimestamp() }, { merge: true });
-    return ACCOUNT_NUMBER_PREFIX + String(next).padStart(ACCOUNT_NUMBER_PAD, '0');
-  });
-}
-
-async function accountNumberExists(num) {
-  const q = query(collection(db, 'customers'),
-    where('accountNumber', '==', num), limit(1));
-  const snap = await getDocs(q);
-  return !snap.empty;
-}
-
-/* ---------- Submit ---------- */
-document.getElementById('customerForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  clearAllErrors();
-  let ok = true;
-
-  const name = fullNameEl.value.trim();
-  const phoneRaw = phoneEl.value.trim();
-  const phoneDigits = normalizePhone(phoneRaw);
-  const email = emailEl.value.trim();
-  const nok = nextOfKinEl.value.trim();
-  const nokPhoneRaw = nokPhoneEl.value.trim();
-  const nokPhoneDigits = normalizePhone(nokPhoneRaw);
-  const digital = digitalEl.value.trim();
-  const notes = notesEl.value.trim();
-
-  if (!name || name.length < 3) { showFieldError('fullNameError', true); ok = false; }
-  if (!phoneDigits || !isValidGhanaPhone(phoneDigits)) { showFieldError('phoneError', true); ok = false; }
-  if (email && !isValidEmail(email)) { showFieldError('emailError', true); ok = false; }
-  if (!nok || nok.length < 3) { showFieldError('nextOfKinError', true); ok = false; }
-  if (!nokPhoneDigits || !isValidGhanaPhone(nokPhoneDigits)) { showFieldError('nextOfKinPhoneError', true); ok = false; }
-
-  if (!ok) {
-    showBanner('Please fix the highlighted fields.');
-    return;
-  }
-
-  if (!auth.currentUser) {
-    showBanner('You must be signed in to register a customer.');
-    return;
-  }
-
-  submitBtn.disabled = true;
-  submitSpinner.classList.remove('hidden');
-  submitLabel.textContent = 'Saving…';
-
-  try {
-    // 1. Reserve account number
-    let accountNumber;
-    let attempts = 0;
-    do {
-      accountNumber = await reserveNextAccountNumber();
-      attempts++;
-      if (attempts > 5) throw new Error('Could not generate a unique account number.');
-    } while (await accountNumberExists(accountNumber));
-
-    // 2. Build customer document
-    const customerRef = doc(collection(db, 'customers'));
-    const customerData = {
-      accountNumber,
-      fullName: name,
-      fullNameLower: name.toLowerCase(),
-      phone: phoneRaw,
-      phoneNormalized: phoneDigits,
-      email: email || null,
-      nextOfKin: nok,
-      nextOfKinPhone: nokPhoneRaw,
-      nextOfKinPhoneNormalized: nokPhoneDigits,
-      digitalAddress: digital || null,
-      notes: notes || null,
-      status: 'active',
-
-      // Financial fields — always zero on registration
-      balance: 0,
-      totalDeposits: 0,
-      totalWithdrawals: 0,
-
-      // Metadata
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      createdBy: auth.currentUser.uid,
-      createdByName: auth.currentUser.email || null
-    };
-
-    // 3. Save
-    await setDoc(customerRef, customerData);
-
-    // 4. Navigate to the customer profile
-    window.location.replace(`customer.html?id=${encodeURIComponent(customerRef.id)}&welcome=1`);
-
-  } catch (err) {
-    console.error('Registration failed:', err);
-    showBanner(
-      navigator.onLine
-        ? 'We couldn’t save this customer. Please try again in a moment.'
-        : 'You’re offline. Reconnect and try again — your form is still here.'
-    );
-    submitBtn.disabled = false;
-    submitSpinner.classList.add('hidden');
-    submitLabel.textContent = 'Save Customer';
-  }
-});
-
-/* ---------- Auth guard ---------- */
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.replace('index.html');
-  }
-});
-</script>
-
+<script type="module" src="js/register-customer.js"></script>
 </body>
 </html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Staff &amp; roles — Area Supa Ventures</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen bg-brand-bg">
+
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="dashboard.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">Staff &amp; roles</h1>
+        <p id="subHeader" class="text-[11px] text-stone-500 truncate">Sub-admins, collectors and permissions</p>
+      </div>
+    </div>
+    <div id="headerActions" class="flex items-center gap-2"></div>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-28">
+
+  <section class="mb-5 rounded-2xl bg-[#20201E] text-white p-5 relative overflow-hidden fade-up">
+    <div class="absolute -right-8 -top-8 w-32 h-32 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative flex items-start justify-between gap-4">
+      <div>
+        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold">Your team</p>
+        <p class="mt-1 text-[13px] text-stone-300 leading-relaxed">Add sub-admins and staff and choose what each person can do. You can only manage roles below your own.</p>
+      </div>
+      <button id="addBtn" type="button" class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-brand-gold hover:bg-brand-goldHover text-[#1A1A18] text-[12px] font-bold rounded-xl">
+        <i class="fa-solid fa-user-plus text-[11px]"></i> Add staff
+      </button>
+    </div>
+  </section>
+
+  <section class="mb-6 fade-up">
+    <h2 class="text-sm font-bold text-stone-900 tracking-tight mb-3">Staff</h2>
+    <div id="staffList" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+      <div class="p-4"><div class="skeleton h-3.5 w-40"></div><div class="skeleton h-2.5 w-24 mt-2"></div></div>
+    </div>
+  </section>
+
+  <section class="fade-up">
+    <h2 class="text-sm font-bold text-stone-900 tracking-tight mb-3">What each role can do</h2>
+    <div id="roleGuide" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+  </section>
+
+  <!-- Add / edit sheet -->
+  <div id="sheet" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
+    <form id="staffForm" class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] overflow-y-auto" novalidate>
+      <div class="px-6 pt-6 pb-3 flex items-center justify-between">
+        <h2 id="sheetTitle" class="text-[16px] font-bold text-stone-900">Add staff</h2>
+        <button type="button" id="closeSheet" class="w-9 h-9 rounded-lg text-stone-500 hover:bg-stone-100" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 pb-6 space-y-4">
+        <div id="formError" class="hidden rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-[12.5px] text-red-800"></div>
+        <div>
+          <label class="field-label" for="sName">Full name <span class="text-red-500">*</span></label>
+          <input id="sName" class="field-input" maxlength="80" autocomplete="off" />
+        </div>
+        <div id="emailRow">
+          <label class="field-label" for="sEmail">Email (used to sign in) <span class="text-red-500">*</span></label>
+          <input id="sEmail" type="email" class="field-input" autocomplete="off" />
+        </div>
+        <div>
+          <label class="field-label" for="sPhone">Phone</label>
+          <input id="sPhone" type="tel" class="field-input" placeholder="Optional — allows sign-in with an SMS code" />
+        </div>
+        <div>
+          <label class="field-label" for="sBranch">Branch</label>
+          <select id="sBranch" class="field-input"><option value="">No specific branch</option></select>
+        </div>
+        <div>
+          <p class="field-label">Role <span class="text-red-500">*</span></p>
+          <div id="roleChoices" class="space-y-2"></div>
+        </div>
+        <div id="passwordRow">
+          <label class="field-label" for="sPassword">Temporary password <span class="text-red-500">*</span></label>
+          <div class="flex gap-2">
+            <input id="sPassword" type="text" class="field-input font-mono" autocomplete="new-password" />
+            <button type="button" id="genPw" class="btn-light px-3 text-[12px] shrink-0">Generate</button>
+          </div>
+          <p class="field-hint">At least 10 characters with letters and numbers. They must change it at first sign-in.</p>
+        </div>
+        <button id="saveStaff" type="submit" class="btn-dark w-full py-3.5 text-sm">Save</button>
+      </div>
+    </form>
+  </div>
+
+</main>
+
+<script type="module" src="js/staff.js"></script>
+</body>
+</html>

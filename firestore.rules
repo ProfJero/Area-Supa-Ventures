@@ -1,0 +1,106 @@
+rules_version = '2';
+
+// Area Supa Ventures security rules.
+//
+// Principle: the browser may READ what the signed-in staff member's role
+// allows, but may not WRITE anything that involves money, customers, roles or
+// settings. Those writes go through Cloud Functions (functions/src), which
+// check the caller's role on the server. Roles live in users/{uid}, which only
+// the functions can write.
+//
+// Keep the permission lists in step with functions/src/roles.js.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isStaff() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && me().status == 'active'
+        && me().role in ['owner', 'admin', 'manager', 'collector', 'viewer'];
+    }
+
+    function perms() {
+      return {
+        'owner':     ['customers.view', 'transactions.view', 'reports.view', 'sms.send', 'sms.billing', 'staff.manage', 'settings.manage', 'audit.view'],
+        'admin':     ['customers.view', 'transactions.view', 'reports.view', 'sms.send', 'sms.billing', 'staff.manage', 'settings.manage', 'audit.view'],
+        'manager':   ['customers.view', 'transactions.view', 'reports.view', 'sms.send'],
+        'collector': ['customers.view', 'transactions.view'],
+        'viewer':    ['customers.view', 'transactions.view', 'reports.view']
+      }[me().role];
+    }
+
+    function can(permission) {
+      return isStaff() && permission in perms();
+    }
+
+    // Staff profiles: you can read your own; staff managers can read all.
+    // All writes go through functions (createStaff, updateStaff, updateMyProfile ...).
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || can('staff.manage'));
+      allow write: if false;
+    }
+
+    match /customers/{customerId} {
+      allow read: if can('customers.view');
+      allow write: if false;
+    }
+
+    match /transactions/{txId} {
+      allow read: if can('transactions.view');
+      allow write: if false;
+    }
+
+    // Dashboard totals maintained by the functions.
+    match /stats/{doc} {
+      allow read: if isStaff();
+      allow write: if false;
+    }
+    match /statsDaily/{day} {
+      allow read: if isStaff();
+      allow write: if false;
+    }
+
+    match /settings/{doc} {
+      allow read: if isStaff();
+      allow write: if false;
+    }
+
+    // Notifications: staff may mark their own as read, or delete them.
+    match /notifications/{id} {
+      allow read, delete: if isStaff() && resource.data.userId == request.auth.uid;
+      allow update: if isStaff()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create: if false;
+    }
+
+    match /smsLogs/{id} {
+      allow read: if can('sms.send');
+      allow write: if false;
+    }
+
+    match /smsPayments/{id} {
+      allow read: if can('sms.billing');
+      allow write: if false;
+    }
+
+    match /auditLogs/{id} {
+      allow read: if can('audit.view');
+      allow write: if false;
+    }
+
+    // Everything else (counters, ...) is server-only.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

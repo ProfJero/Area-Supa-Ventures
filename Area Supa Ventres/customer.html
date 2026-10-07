@@ -6,21 +6,20 @@
 <meta name="theme-color" content="#F8F6F2" />
 <title>Customer — Area Supa Ventures</title>
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-<script>
-tailwind.config = {
-  theme: { extend: {
-    colors: {
-      'brand-gold': '#C59A3F', 'brand-gold-dark': '#B08632',
-      'brand-charcoal': '#212121', 'brand-bg': '#F8F6F2',
-      'brand-success': '#1B7F4B', 'brand-danger': '#B93838',
-    },
-    fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] },
-  }},
-};
-</script>
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
 
 <style>
   html, body { -webkit-tap-highlight-color: transparent; }
@@ -67,7 +66,7 @@ tailwind.config = {
               class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
         <i class="fa-regular fa-copy text-[14px]"></i>
       </button>
-      <button id="editBtn" type="button" aria-label="Edit customer"
+      <button id="editBtn" type="button" aria-label="Edit customer" data-perm="customers.edit"
               class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center">
         <i class="fa-solid fa-pen text-[13px]"></i>
       </button>
@@ -137,18 +136,18 @@ tailwind.config = {
 
   <!-- Primary actions -->
   <section class="grid grid-cols-2 gap-3 mb-3 fade-up">
-    <a id="depositBtn" href="#"
+    <a id="depositBtn" href="#" data-perm="transactions.deposit"
        class="w-full py-3.5 bg-[#212121] hover:bg-black active:scale-[0.98] transition-all text-white font-semibold text-sm rounded-xl shadow text-center inline-flex items-center justify-center gap-2">
       <i class="fa-solid fa-plus text-[12px]"></i> Deposit
     </a>
-    <a id="withdrawBtn" href="#"
+    <a id="withdrawBtn" href="#" data-perm="transactions.withdraw"
        class="w-full py-3.5 bg-white border border-stone-300 hover:bg-stone-50 active:scale-[0.98] transition-all text-stone-900 font-semibold text-sm rounded-xl shadow-sm text-center inline-flex items-center justify-center gap-2">
       <i class="fa-solid fa-minus text-[12px]"></i> Withdraw
     </a>
   </section>
 
   <!-- Secondary actions -->
-  <section class="grid grid-cols-3 gap-2 mb-6 fade-up">
+  <section class="grid grid-cols-4 gap-2 mb-6 fade-up">
     <a id="statementBtn" href="#"
        class="w-full py-2.5 bg-white border border-stone-200 hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-stone-700 text-[12px] font-semibold rounded-lg inline-flex items-center justify-center gap-1.5">
       <i class="fa-solid fa-file-invoice text-brand-gold text-[11px]"></i> Statement
@@ -156,6 +155,10 @@ tailwind.config = {
     <a id="callBtn" href="#"
        class="w-full py-2.5 bg-white border border-stone-200 hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-stone-700 text-[12px] font-semibold rounded-lg inline-flex items-center justify-center gap-1.5">
       <i class="fa-solid fa-phone text-brand-gold text-[11px]"></i> Call
+    </a>
+    <a id="smsBtn" href="#" data-perm="sms.send"
+       class="w-full py-2.5 bg-white border border-stone-200 hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-stone-700 text-[12px] font-semibold rounded-lg inline-flex items-center justify-center gap-1.5">
+      <i class="fa-solid fa-comment-sms text-brand-gold text-[11px]"></i> SMS
     </a>
     <button id="copyAcctBtn2" type="button"
        class="w-full py-2.5 bg-white border border-stone-200 hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-stone-700 text-[12px] font-semibold rounded-lg inline-flex items-center justify-center gap-1.5">
@@ -191,28 +194,13 @@ tailwind.config = {
     </div>
   </section>
 
-  <!-- Contact details -->
-  <section class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 mb-6 fade-up">
-    <div class="px-4 py-3">
-      <p class="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-stone-400">Contact details</p>
+  <!-- Bio data -->
+  <section class="bg-white rounded-2xl border border-stone-200 mb-6 fade-up overflow-hidden">
+    <div class="px-4 py-3 border-b border-stone-100">
+      <p class="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-stone-400">Bio data</p>
     </div>
-    <div class="flex items-start justify-between gap-3 p-4">
-      <span class="text-[12.5px] text-stone-500">Email</span>
-      <span id="detailEmail" class="text-[12.5px] font-semibold text-stone-900 text-right break-all">—</span>
-    </div>
-    <div class="flex items-start justify-between gap-3 p-4">
-      <span class="text-[12.5px] text-stone-500">Digital address</span>
-      <span id="detailDigital" class="text-[12.5px] font-semibold text-stone-900 text-right">—</span>
-    </div>
-    <div class="flex items-start justify-between gap-3 p-4">
-      <span class="text-[12.5px] text-stone-500">Next of kin</span>
-      <span id="detailNok" class="text-[12.5px] font-semibold text-stone-900 text-right">—</span>
-    </div>
-    <div class="flex items-start justify-between gap-3 p-4">
-      <span class="text-[12.5px] text-stone-500">Next of kin phone</span>
-      <span id="detailNokPhone" class="text-[12.5px] font-semibold text-stone-900 text-right">—</span>
-    </div>
-    <div id="notesRow" class="p-4 hidden">
+    <dl id="bioList" class="divide-y divide-stone-100"></dl>
+    <div id="notesRow" class="p-4 hidden border-t border-stone-100">
       <p class="text-[12.5px] text-stone-500 mb-1">Notes</p>
       <p id="detailNotes" class="text-[12.5px] text-stone-800 whitespace-pre-wrap"></p>
     </div>
@@ -243,258 +231,25 @@ tailwind.config = {
       </div>
     </div>
   </section>
+
+  <!-- Danger zone -->
+  <section data-perm="customers.delete" class="mt-8 rounded-2xl border border-red-200 bg-red-50/60 p-5 fade-up">
+    <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-700 flex items-center gap-2">
+      <i class="fa-solid fa-triangle-exclamation text-[10px]"></i> Danger zone
+    </p>
+    <p class="mt-2 text-[12.5px] text-red-900/80 leading-relaxed">
+      Deleting a customer is <strong>permanent</strong>. Their profile, photo and <strong>entire transaction history</strong>
+      are erased and cannot be recovered. Totals in reports will change. Settle any remaining balance first.
+    </p>
+    <button id="deleteBtn" type="button"
+            class="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-red-300 text-red-700 hover:bg-red-600 hover:text-white hover:border-red-600 text-[12.5px] font-semibold rounded-xl transition-colors">
+      <i class="fa-solid fa-trash-can text-[11px]"></i> Delete customer permanently
+    </button>
+  </section>
 </main>
 
 <!-- ================= SCRIPT ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore,
-  collection, query, where, orderBy, limit, getDocs, getDoc, doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { mountBottomNav } from './components/bottom-nav.js';
-mountBottomNav('customers');
-
-/* ---------- Firebase ---------- */
-const app = initializeApp({
-  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
-  authDomain: "area-supa-ventures.firebaseapp.com",
-  projectId: "area-supa-ventures",
-  storageBucket: "area-supa-ventures.firebasestorage.app",
-  messagingSenderId: "339989502774",
-  appId: "1:339989502774:web:6cbf99587d4317af0a7197"
-});
-const auth = getAuth(app);
-let db;
-try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
-catch { db = getFirestore(app); }
-
-/* ---------- Refs ---------- */
-const $ = (id) => document.getElementById(id);
-const params = new URLSearchParams(location.search);
-const customerId = params.get('id');
-const isWelcome = params.get('welcome') === '1';
-
-if (!customerId) window.location.replace('customers.html');
-
-const loadError = $('loadError'), loadErrorMsg = $('loadErrorMsg'), retryBtn = $('retryBtn');
-const welcomeBanner = $('welcomeBanner');
-const headerName = $('headerName'), headerAcct = $('headerAcct');
-const avatar = $('avatar'), customerName = $('customerName'), customerAcct = $('customerAcct');
-const customerStatus = $('customerStatus'), customerPhone = $('customerPhone');
-const balanceEl = $('balance');
-const depositBtn = $('depositBtn'), withdrawBtn = $('withdrawBtn');
-const statementBtn = $('statementBtn'), callBtn = $('callBtn'), copyAcctBtn2 = $('copyAcctBtn2');
-const copyAcctLabel = $('copyAcctLabel');
-const totalDepositsEl = $('totalDeposits'), totalWithdrawalsEl = $('totalWithdrawals'), registeredAtEl = $('registeredAt');
-const detailEmail = $('detailEmail'), detailDigital = $('detailDigital');
-const detailNok = $('detailNok'), detailNokPhone = $('detailNokPhone');
-const notesRow = $('notesRow'), detailNotes = $('detailNotes');
-const recentTxList = $('recentTxList'), viewAllTx = $('viewAllTx');
-const copyAcctBtn = $('copyAcctBtn'), editBtn = $('editBtn');
-
-/* ---------- Helpers ---------- */
-function formatGHS(n) { const v = Number(n) || 0; return v.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function initialsFrom(name) {
-  if (!name) return '??';
-  const p = String(name).trim().split(/\s+/);
-  return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '??';
-}
-function tsToDate(v) { if (!v) return null; if (v.toDate) return v.toDate(); if (v instanceof Date) return v; return new Date(v); }
-function dash(v) { return v && String(v).trim() ? escapeHtml(v) : '<span class="text-stone-400 font-normal">—</span>'; }
-
-function showError(msg) { loadErrorMsg.textContent = msg || 'Check your connection and retry.'; loadError.classList.remove('hidden'); }
-function hideError() { loadError.classList.add('hidden'); }
-
-/* ---------- Copy account number ---------- */
-let copyResetTimer = null;
-
-async function copyAccountNumber(showLabel = false) {
-  const acct = currentCustomer?.accountNumber;
-  if (!acct) return;
-  try {
-    await navigator.clipboard.writeText(acct);
-  } catch {
-    // Fallback for older browsers
-    const ta = document.createElement('textarea');
-    ta.value = acct; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); } catch {}
-    ta.remove();
-  }
-
-  // Visual confirmation
-  if (showLabel && copyAcctLabel) {
-    copyAcctLabel.textContent = 'Copied';
-    clearTimeout(copyResetTimer);
-    copyResetTimer = setTimeout(() => { copyAcctLabel.textContent = 'Copy'; }, 1500);
-  } else {
-    const old = copyAcctBtn.innerHTML;
-    copyAcctBtn.innerHTML = '<i class="fa-solid fa-check text-[14px] text-emerald-600"></i>';
-    setTimeout(() => { copyAcctBtn.innerHTML = old; }, 1400);
-  }
-}
-
-copyAcctBtn.addEventListener('click', () => copyAccountNumber(false));
-copyAcctBtn2.addEventListener('click', () => copyAccountNumber(true));
-
-/* ---------- Edit (placeholder) ---------- */
-editBtn.addEventListener('click', () => {
-  if (!customerId) return;
-  window.location.href = `edit-customer.html?id=${encodeURIComponent(customerId)}`;
-});
-
-/* ---------- Load ---------- */
-let currentCustomer = null;
-
-async function load() {
-  hideError();
-  try {
-    const snap = await getDoc(doc(db, 'customers', customerId));
-    if (!snap.exists()) {
-      showError('This customer could not be found. They may have been removed.');
-      return;
-    }
-    currentCustomer = { id: snap.id, ...snap.data() };
-    renderCustomer(currentCustomer);
-    await loadRecentTransactions();
-  } catch (e) {
-    console.error('Customer load failed:', e);
-    if (!navigator.onLine) {
-      showError('You’re offline. Reconnect to load this customer.');
-    } else {
-      showError('Could not reach the server. Check your connection and retry.');
-    }
-  }
-}
-
-function renderCustomer(c) {
-  const name = c.fullName || 'Unnamed';
-  const acct = c.accountNumber || '—';
-  const status = c.status || 'active';
-
-  // Header
-  headerName.textContent = name;
-  headerAcct.textContent = acct;
-
-  // Profile card
-  avatar.textContent = initialsFrom(name);
-  customerName.textContent = name;
-  customerAcct.textContent = acct;
-  customerStatus.textContent = status;
-  customerStatus.className = status === 'active'
-    ? 'text-emerald-400 font-medium text-[11px] uppercase tracking-wide'
-    : 'text-stone-400 font-medium text-[11px] uppercase tracking-wide';
-  customerPhone.textContent = c.phone || '—';
-
-  // Balance
-  balanceEl.innerHTML = `GH₵${formatGHS(c.balance)}`;
-
-  // Primary links
-  depositBtn.href = `deposit.html?customerId=${encodeURIComponent(c.id)}`;
-  withdrawBtn.href = `withdraw.html?customerId=${encodeURIComponent(c.id)}`;
-
-  // Secondary links
-  statementBtn.href = `statement.html?id=${encodeURIComponent(c.id)}`;
-  callBtn.href = c.phone ? `tel:${String(c.phone).replace(/[^\d+]/g, '')}` : '#';
-  if (!c.phone) {
-    callBtn.classList.add('opacity-40', 'pointer-events-none');
-    callBtn.setAttribute('aria-disabled', 'true');
-  }
-
-  // View all transactions
-  viewAllTx.href = `transactions.html?customerId=${encodeURIComponent(c.id)}`;
-
-  // Summary
-  totalDepositsEl.textContent = `GH₵${formatGHS(c.totalDeposits)}`;
-  totalWithdrawalsEl.textContent = `GH₵${formatGHS(c.totalWithdrawals)}`;
-  const reg = tsToDate(c.createdAt);
-  registeredAtEl.textContent = reg
-    ? reg.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—';
-
-  // Contact details
-  detailEmail.innerHTML = dash(c.email);
-  detailDigital.innerHTML = dash(c.digitalAddress);
-  detailNok.innerHTML = dash(c.nextOfKin);
-  detailNokPhone.innerHTML = dash(c.nextOfKinPhone);
-
-  if (c.notes && String(c.notes).trim()) {
-    notesRow.classList.remove('hidden');
-    detailNotes.textContent = c.notes;
-  } else {
-    notesRow.classList.add('hidden');
-  }
-
-  // Welcome banner
-  if (isWelcome) welcomeBanner.classList.remove('hidden');
-}
-
-async function loadRecentTransactions() {
-  try {
-    const q = query(
-      collection(db, 'transactions'),
-      where('customerId', '==', customerId),
-      orderBy('createdAt', 'desc'),
-      limit(5)
-    );
-    const snap = await getDocs(q);
-    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    if (!items.length) {
-      recentTxList.innerHTML = `
-        <div class="p-8 text-center">
-          <i class="fa-solid fa-receipt text-2xl text-stone-300"></i>
-          <p class="mt-2 text-sm font-semibold text-stone-700">No transactions yet</p>
-          <p class="text-xs text-stone-500 mt-0.5">Record their first deposit to see it here.</p>
-        </div>`;
-      return;
-    }
-
-    recentTxList.innerHTML = items.map(t => {
-      const isDep = t.type === 'deposit';
-      const sign = isDep ? '+' : '−';
-      const color = isDep ? 'text-[#1B7F4B]' : 'text-[#B93838]';
-      const label = isDep ? 'Deposit' : 'Withdrawal';
-      const when = tsToDate(t.createdAt);
-      const whenStr = when
-        ? when.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) +
-          ' · ' +
-          when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-        : '';
-      return `
-        <div class="p-3.5 flex items-center justify-between hover:bg-stone-50/70 transition-colors">
-          <div class="min-w-0 flex-1 pr-3">
-            <p class="text-[13px] font-bold text-stone-900">${label}</p>
-            <p class="text-[11px] text-stone-400 truncate">${whenStr}</p>
-          </div>
-          <div class="text-right">
-            <p class="text-[13px] font-bold ${color} whitespace-nowrap">${sign}GH₵${formatGHS(t.amount)}</p>
-            <p class="text-[10.5px] text-stone-400 mt-0.5">Bal. GH₵${formatGHS(t.balanceAfter)}</p>
-          </div>
-        </div>`;
-    }).join('');
-  } catch (e) {
-    console.error('Recent tx load failed:', e);
-    recentTxList.innerHTML = `
-      <div class="p-6 text-center">
-        <p class="text-sm text-stone-500">Transactions unavailable</p>
-        <p class="text-xs text-stone-400 mt-0.5">Check your connection.</p>
-      </div>`;
-  }
-}
-
-/* ---------- Retry ---------- */
-retryBtn.addEventListener('click', load);
-
-/* ---------- Auth guard ---------- */
-onAuthStateChanged(auth, (u) => {
-  if (!u) { window.location.replace('index.html'); return; }
-  load();
-});
-</script>
+<script type="module" src="js/customer.js"></script>
 
 </body>
 </html>

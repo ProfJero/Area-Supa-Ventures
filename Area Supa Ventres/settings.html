@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Settings — Area Supa Ventures</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen bg-brand-bg">
+
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="dashboard.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">Settings</h1>
+        <p id="subHeader" class="text-[11px] text-stone-500 truncate">Business details, branches and security</p>
+      </div>
+    </div>
+    <div id="headerActions" class="flex items-center gap-2"></div>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-28">
+
+  <form id="generalForm" class="space-y-5 fade-up" novalidate>
+    <section class="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+      <p class="section-title flex items-center gap-2"><i class="fa-solid fa-store text-[10px]"></i> Business</p>
+      <div>
+        <label class="field-label" for="businessName">Business name</label>
+        <input id="businessName" class="field-input" maxlength="60" />
+        <p class="field-hint">Used in SMS messages as {company}.</p>
+      </div>
+      <div>
+        <label class="field-label" for="idleTimeout">Auto sign-out after inactivity (minutes)</label>
+        <input id="idleTimeout" type="number" min="2" max="240" class="field-input" />
+        <p class="field-hint">Protects accounts left open on shared phones. 15 minutes is a good default.</p>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <p class="section-title flex items-center gap-2"><i class="fa-solid fa-code-branch text-[10px]"></i> Branches</p>
+      <p class="text-[12px] text-stone-500">Customers and staff can be assigned to a branch. Renaming a branch here does not change existing customers.</p>
+      <div id="branchList" class="space-y-2"></div>
+      <div class="flex gap-2">
+        <input id="newBranch" class="field-input" maxlength="60" placeholder="New branch name" />
+        <button id="addBranch" type="button" class="btn-light px-4 text-[12px] shrink-0"><i class="fa-solid fa-plus text-[11px]"></i> Add</button>
+      </div>
+    </section>
+
+    <div id="saveError" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12.5px] text-red-800"></div>
+    <button id="saveBtn" type="submit" class="btn-dark w-full py-3.5 text-sm"><i class="fa-solid fa-check text-[12px]"></i> Save settings</button>
+  </form>
+
+  <section id="upgradeSection" class="hidden mt-8 bg-white rounded-2xl border border-stone-200 p-5 fade-up">
+    <p class="section-title flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Data upgrade (owner)</p>
+    <p class="mt-2 text-[12.5px] text-stone-600 leading-relaxed">
+      Run this once after updating the app. It prepares customers registered with the earlier version for sorting,
+      search and birthday messages, and recalculates the dashboard totals. It is safe to run again.
+    </p>
+    <label class="mt-3 flex items-start gap-2 text-[12.5px] text-stone-700">
+      <input id="renumber" type="checkbox" class="mt-0.5 rounded border-stone-300 text-brand-charcoal focus:ring-0" />
+      <span>Also renumber existing customers to the new <strong>ASV-10001</strong> format, in order of registration.
+        Their old number is kept and can still be searched. <span class="text-red-700">Only do this if customers have not been given printed cards with the old numbers.</span></span>
+    </label>
+    <button id="upgradeBtn" type="button" class="mt-4 btn-light px-4 py-2.5 text-[12.5px]"><i class="fa-solid fa-play text-[11px]"></i> Run data upgrade</button>
+    <p id="upgradeResult" class="mt-3 text-[12px] text-stone-600"></p>
+  </section>
+
+</main>
+
+<script type="module" src="js/settings.js"></script>
+</body>
+</html>

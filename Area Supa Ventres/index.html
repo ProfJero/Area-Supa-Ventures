@@ -7,37 +7,22 @@
 <title>Area Supa Ventures — Collector Login</title>
 
 <!-- Tailwind -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          gold: '#C59A3F',
-          goldHover: '#B08632',
-          goldLight: '#DFB04F',
-          goldDark: '#9E7422',
-          charcoal: '#212121',
-          charcoalDark: '#141414',
-          warmWhite: '#FBF9F5',
-          surface: '#FFFFFF',
-          inputBorder: '#E5E1D8',
-          muted: '#7A756D',
-          borderMuted: '#EFECE6'
-        }
-      },
-      fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
-      }
-    }
-  }
-};
-</script>
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
 
 <style>
   html, body { -webkit-tap-highlight-color: transparent; }
@@ -288,252 +273,7 @@ tailwind.config = {
 <div id="recaptcha-container"></div>
 
 <!-- ============================= SCRIPT ============================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getAuth,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence,
-  signInWithEmailAndPassword,
-  signInWithPhoneNumber,
-  RecaptchaVerifier,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-/* ---------- Firebase init ---------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
-  authDomain: "area-supa-ventures.firebaseapp.com",
-  projectId: "area-supa-ventures",
-  storageBucket: "area-supa-ventures.firebasestorage.app",
-  messagingSenderId: "339989502774",
-  appId: "1:339989502774:web:6cbf99587d4317af0a7197",
-  measurementId: "G-WDJCSK78QE"
-};
-
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    window.location.replace('dashboard.html');
-  }
-});
-
-/* ---------- UI refs ---------- */
-const splash         = document.getElementById('splash');
-const login          = document.getElementById('login');
-
-const loginForm      = document.getElementById('loginForm');
-const otpForm        = document.getElementById('otpForm');
-
-const identifierEl   = document.getElementById('identifier');
-const passwordEl     = document.getElementById('password');
-const rememberEl     = document.getElementById('rememberMe');
-const forgotLink     = document.getElementById('forgotLink');
-
-const loginBtn       = document.getElementById('loginBtn');
-const loginBtnLabel  = document.getElementById('loginBtnLabel');
-const loginBtnSpin   = document.getElementById('loginBtnSpinner');
-
-const verifyBtn      = document.getElementById('verifyBtn');
-const verifyBtnLabel = document.getElementById('verifyBtnLabel');
-const verifyBtnSpin  = document.getElementById('verifyBtnSpinner');
-const otpCodeEl      = document.getElementById('otpCode');
-const otpPhoneLabel  = document.getElementById('otpPhoneLabel');
-const backToLogin    = document.getElementById('backToLogin');
-
-const togglePassword = document.getElementById('togglePassword');
-const togglePassIcon = document.getElementById('togglePasswordIcon');
-
-const errorBox       = document.getElementById('errorBox');
-const errorText      = document.getElementById('errorText');
-const successBox     = document.getElementById('successBox');
-const successText    = document.getElementById('successText');
-
-/* ---------- Splash → Login transition ---------- */
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    splash.classList.add('opacity-0');
-    setTimeout(() => {
-      splash.remove();
-      login.classList.remove('hidden');
-    }, 600);
-  }, 2400);
-});
-
-/* ---------- Helpers ---------- */
-function showError(message) {
-  successBox.classList.add('hidden');
-  errorText.textContent = message;
-  errorBox.classList.remove('hidden');
-}
-function hideError() { errorBox.classList.add('hidden'); }
-
-function showSuccess(message) {
-  errorBox.classList.add('hidden');
-  successText.textContent = message;
-  successBox.classList.remove('hidden');
-}
-
-function setLoading(button, labelEl, spinnerEl, isLoading, originalLabel) {
-  button.disabled = isLoading;
-  spinnerEl.classList.toggle('hidden', !isLoading);
-  labelEl.textContent = isLoading ? 'Please wait…' : originalLabel;
-}
-
-/* Convert Ghanaian numbers to E.164 (+233…) */
-function toE164(raw) {
-  let p = String(raw).replace(/[\s\-()]/g, '');
-  if (p.startsWith('+')) return p;
-  if (p.startsWith('00')) return '+' + p.slice(2);
-  if (p.startsWith('0'))  return '+233' + p.slice(1);
-  if (p.startsWith('233')) return '+' + p;
-  return '+233' + p;
-}
-function looksLikeEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-function looksLikePhone(v) { return /^[+\d][\d\s\-()]{6,}$/.test(v); }
-
-/* ---------- Password visibility toggle ---------- */
-togglePassword.addEventListener('click', () => {
-  const isPwd = passwordEl.type === 'password';
-  passwordEl.type = isPwd ? 'text' : 'password';
-  togglePassIcon.className = isPwd
-    ? 'fa-regular fa-eye-slash text-[14px]'
-    : 'fa-regular fa-eye text-[14px]';
-  togglePassword.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-});
-
-/* ---------- Forgot password (email flow) ---------- */
-forgotLink.addEventListener('click', (e) => {
-  e.preventDefault();
-  const id = identifierEl.value.trim();
-  if (!looksLikeEmail(id)) {
-    showError('Enter your email address first, then tap "Forgot password?".');
-    identifierEl.focus();
-    return;
-  }
-  showSuccess(`A reset link will be sent to ${id} (implement sendPasswordResetEmail in the next step).`);
-});
-
-/* ---------- Email / Password login ---------- */
-loginForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  hideError();
-
-  const raw = identifierEl.value.trim();
-  const pwd = passwordEl.value;
-
-  if (!raw) { showError('Please enter your phone number or email.'); return; }
-
-  // Email path
-  if (looksLikeEmail(raw)) {
-    if (!pwd) { showError('Please enter your password.'); return; }
-
-    try {
-      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, true);
-      await setPersistence(auth,
-        rememberEl.checked ? browserLocalPersistence : browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, raw, pwd);
-      showSuccess('Signed in successfully. Loading your dashboard…');
-
-    } catch (err) {
-      console.error(err);
-      showError(prettyAuthError(err));
-    } finally {
-      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, false, 'Login');
-    }
-    return;
-  }
-
-  // Phone path
-  if (looksLikePhone(raw)) {
-    try {
-      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, true);
-
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {}
-        });
-      }
-
-      const phoneE164 = toE164(raw);
-      const confirmation = await signInWithPhoneNumber(auth, phoneE164, window.recaptchaVerifier);
-      window.confirmationResult = confirmation;
-
-      otpPhoneLabel.textContent = phoneE164;
-      loginForm.classList.add('hidden');
-      otpForm.classList.remove('hidden');
-      otpCodeEl.value = '';
-      otpCodeEl.focus();
-      hideError();
-
-    } catch (err) {
-      console.error(err);
-      showError(prettyAuthError(err));
-      if (window.recaptchaVerifier) {
-        try { window.recaptchaVerifier.clear(); } catch (_) {}
-        window.recaptchaVerifier = null;
-      }
-    } finally {
-      setLoading(loginBtn, loginBtnLabel, loginBtnSpin, false, 'Login');
-    }
-    return;
-  }
-
-  showError('Enter a valid phone number or email address.');
-});
-
-/* ---------- OTP verification ---------- */
-otpForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  hideError();
-
-  const code = otpCodeEl.value.trim();
-  if (code.length !== 6) { showError('Enter the 6-digit code we sent you.'); return; }
-
-  try {
-    setLoading(verifyBtn, verifyBtnLabel, verifyBtnSpin, true);
-    const result = await window.confirmationResult.confirm(code);
-    console.log('Signed in user:', result.user);
-    showSuccess('Verified. Loading your dashboard…');
-    // TODO: window.location.href = 'dashboard.html';
-  } catch (err) {
-    console.error(err);
-    showError('That code is incorrect or has expired. Please try again.');
-  } finally {
-    setLoading(verifyBtn, verifyBtnLabel, verifyBtnSpin, false, 'Verify & Sign in');
-  }
-});
-
-/* ---------- Back to login ---------- */
-backToLogin.addEventListener('click', () => {
-  otpForm.classList.add('hidden');
-  loginForm.classList.remove('hidden');
-  hideError();
-  passwordEl.value = '';
-});
-
-/* ---------- Friendly error messages ---------- */
-function prettyAuthError(err) {
-  const code = err?.code || '';
-  switch (code) {
-    case 'auth/invalid-email':            return 'That email address doesn’t look right.';
-    case 'auth/user-disabled':            return 'This account has been disabled. Contact the owner.';
-    case 'auth/user-not-found':           return 'No account found with those details.';
-    case 'auth/wrong-password':
-    case 'auth/invalid-credential':       return 'Incorrect phone/email or password.';
-    case 'auth/too-many-requests':        return 'Too many attempts. Please wait a moment and try again.';
-    case 'auth/invalid-phone-number':     return 'That phone number is not valid. Use a Ghana number, e.g. 024 555 0192.';
-    case 'auth/quota-exceeded':           return 'SMS quota exceeded. Try again later.';
-    case 'auth/network-request-failed':   return 'Network error. Check your internet connection.';
-    case 'auth/captcha-check-failed':     return 'Security check failed. Please refresh the page.';
-    default:                              return err?.message || 'Something went wrong. Please try again.';
-  }
-}
-</script>
+<script type="module" src="js/index.js"></script>
 
 </body>
 </html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F8F6F2" />
+<title>Audit log — Area Supa Ventures</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+
+</head>
+
+<body class="font-sans text-stone-900 antialiased min-h-screen bg-brand-bg">
+
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="dashboard.html" aria-label="Back"
+         class="w-9 h-9 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i>
+      </a>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-stone-900 truncate">Audit log</h1>
+        <p id="subHeader" class="text-[11px] text-stone-500 truncate">Who did what, and when</p>
+      </div>
+    </div>
+    <div id="headerActions" class="flex items-center gap-2"></div>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-28">
+
+  <p class="text-[12px] text-stone-500 mb-4 fade-up">A permanent record of sensitive actions: customer registrations, edits and deletions, staff and role changes,
+    SMS sends and top-ups, large withdrawals and settings changes. Entries cannot be edited or removed from the app.</p>
+  <div id="auditList" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+    <div class="p-4"><div class="skeleton h-3.5 w-48"></div><div class="skeleton h-2.5 w-28 mt-2"></div></div>
+  </div>
+  <div class="mt-4 text-center"><button id="moreBtn" type="button" class="hidden btn-light px-5 py-2.5 text-[12.5px]">Load more</button></div>
+
+</main>
+
+<script type="module" src="js/audit.js"></script>
+</body>
+</html>

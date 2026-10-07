@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Shared look used across pages (previously copied into each page). */
+@layer components {
+  .skeleton {
+    background: linear-gradient(90deg, #e7e5e4 0%, #f5f4f2 50%, #e7e5e4 100%);
+    background-size: 200% 100%;
+    animation: asv-shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+  .skeleton-dark {
+    background: linear-gradient(90deg, #2b2a27 0%, #3a3833 50%, #2b2a27 100%);
+    background-size: 200% 100%;
+    animation: asv-shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+  .fade-up { animation: asv-fade-up 400ms ease both; }
+
+  .field-label { display: block; font-size: 12px; font-weight: 500; color: #57534e; margin-bottom: 6px; }
+  .field-input {
+    width: 100%; padding: 12px 14px; background: #FCFCF9; border: 1px solid #E5E1D8; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: #1c1917; outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .field-input:focus { border-color: #C59A3F; box-shadow: 0 0 0 1px #C59A3F; }
+  .field-input:disabled { background: #F5F3EF; color: #a8a29e; }
+  .field-hint { font-size: 11px; color: #a8a29e; margin-top: 5px; }
+  .field-error { font-size: 11px; color: #b91c1c; margin-top: 5px; display: none; }
+  .field-error.show { display: block; }
+
+  .section-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: #C59A3F;
+  }
+  .card { background: #fff; border: 1px solid #e7e5e4; border-radius: 1rem; }
+  .btn-dark {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    background: #212121; color: #fff; font-weight: 600; border-radius: .75rem; transition: background-color 150ms;
+  }
+  .btn-dark:hover { background: #000; }
+  .btn-dark:disabled { opacity: .6; cursor: not-allowed; }
+  .btn-light {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    background: #fff; color: #1c1917; font-weight: 600; border: 1px solid #d6d3d1; border-radius: .75rem;
+    transition: background-color 150ms;
+  }
+  .btn-light:hover { background: #fafaf9; }
+  .chip {
+    display: inline-flex; align-items: center; gap: .25rem; padding: .25rem .6rem; border-radius: 999px;
+    font-size: 11px; font-weight: 600; border: 1px solid #e7e5e4; background: #fff; color: #44403c;
+  }
+}
+
+@keyframes asv-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes asv-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Role-gated elements stay invisible until session.js has checked the role. */
+html:not(.perms-ready) [data-perm] { visibility: hidden; }

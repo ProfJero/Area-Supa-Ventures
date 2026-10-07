@@ -6,21 +6,20 @@
 <meta name="theme-color" content="#F8F6F2" />
 <title>Edit Customer — Area Supa Ventures</title>
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-<script>
-tailwind.config = {
-  theme: { extend: {
-    colors: {
-      'brand-gold': '#C59A3F', 'brand-gold-dark': '#B08632',
-      'brand-charcoal': '#212121', 'brand-bg': '#F8F6F2',
-      'brand-success': '#1B7F4B', 'brand-danger': '#B93838',
-    },
-    fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] },
-  }},
-};
-</script>
+<link rel="stylesheet" href="assets/app.css" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="modulepreload" href="js/lib/firebase.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
 
 <style>
   html, body { -webkit-tap-highlight-color: transparent; }
@@ -112,31 +111,21 @@ tailwind.config = {
         <p id="headerSub" class="text-[11px] text-stone-500 truncate">Loading…</p>
       </div>
     </div>
-    <button id="saveBtnTop" type="button"
-            class="hidden sm:inline-flex items-center gap-1.5 px-3.5 h-9 bg-[#212121] hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg shadow-sm transition-colors">
-      <i class="fa-solid fa-check text-[11px]"></i> Save
-    </button>
   </div>
 </header>
 
 <!-- ================= MAIN ================= -->
 <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-32">
 
-  <!-- Error banner -->
   <div id="loadError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
     <i class="fa-solid fa-triangle-exclamation text-red-600 mt-0.5"></i>
     <div class="flex-1 min-w-0">
       <p class="text-sm font-semibold text-red-800">Couldn’t load this customer</p>
       <p id="loadErrorMsg" class="text-[12px] text-red-700 mt-0.5">Check your connection and retry.</p>
-      <button id="retryBtn" type="button"
-              class="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-800 hover:text-red-900 underline underline-offset-2">
-        <i class="fa-solid fa-rotate-right text-[11px]"></i> Retry
-      </button>
     </div>
   </div>
 
-  <!-- Submission error banner -->
-  <div id="saveError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+  <div id="saveError" class="hidden mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3" role="alert">
     <i class="fa-solid fa-circle-exclamation text-red-600 mt-0.5"></i>
     <div class="flex-1 min-w-0">
       <p class="text-sm font-semibold text-red-800">Couldn’t save changes</p>
@@ -144,421 +133,27 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- Read-only identity card -->
-  <section class="rounded-2xl bg-[#20201E] text-white p-5 mb-6 relative overflow-hidden fade-up">
+  <section class="rounded-2xl bg-[#20201E] text-white p-5 mb-5 relative overflow-hidden fade-up">
     <div class="absolute -right-8 -top-8 w-32 h-32 bg-[#C59A3F]/10 rounded-full blur-2xl pointer-events-none"></div>
-    <div class="relative flex items-center gap-4">
-      <div id="avatar" class="w-14 h-14 rounded-full bg-brand-gold flex items-center justify-center text-[#1A1A18] font-bold text-lg shrink-0">
-        <span class="skeleton-dark w-8 h-5 inline-block"></span>
-      </div>
-      <div class="flex-1 min-w-0">
-        <p id="displayName" class="text-[15px] font-bold truncate">
-          <span class="skeleton-dark inline-block w-40 h-4"></span>
-        </p>
-        <div class="flex items-center gap-1.5 mt-1 text-[11.5px]">
-          <span id="displayAccount" class="font-mono text-stone-300">
-            <span class="skeleton-dark inline-block w-20 h-3"></span>
-          </span>
-          <span class="text-stone-500 font-bold">•</span>
-          <span id="displayRegistered" class="text-stone-400">
-            <span class="skeleton-dark inline-block w-24 h-3"></span>
-          </span>
-        </div>
-      </div>
+    <div class="relative">
+      <p id="displayName" class="text-[15px] font-bold truncate"><span class="skeleton-dark inline-block w-40 h-4"></span></p>
+      <p id="displayAccount" class="font-mono text-[12px] text-brand-gold mt-1"><span class="skeleton-dark inline-block w-20 h-3"></span></p>
     </div>
     <div class="relative mt-4 pt-4 border-t border-stone-700/60 flex items-center gap-2 text-[11px] text-stone-400">
       <i class="fa-solid fa-lock text-[10px]"></i>
-      <span>Account number and financial records cannot be edited here</span>
+      <span>Customer ID and balances cannot be edited. Money only changes through deposits and withdrawals.</span>
     </div>
   </section>
 
-  <!-- Form -->
-  <form id="editForm" class="space-y-6 fade-up" novalidate>
-
-    <!-- Personal details -->
-    <section>
-      <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 ml-1 flex items-center gap-2">
-        <i class="fa-solid fa-user text-[10px]"></i>
-        <span>Personal details</span>
-      </h2>
-
-      <div class="rounded-2xl bg-white border border-stone-200 p-5 space-y-4">
-        <div>
-          <label class="field-label" for="fullName">Full name <span class="text-red-500">*</span></label>
-          <input id="fullName" class="field-input" type="text" autocomplete="name" required />
-          <p class="field-error" id="fullNameError">Please enter the customer’s full name.</p>
-        </div>
-
-        <div>
-          <label class="field-label" for="phone">Phone number <span class="text-red-500">*</span></label>
-          <input id="phone" class="field-input" type="tel" autocomplete="tel" required />
-          <p class="field-hint">Ghanaian number. Digits only, spaces are fine.</p>
-          <p class="field-error" id="phoneError">Please enter a valid phone number.</p>
-        </div>
-
-        <div>
-          <label class="field-label" for="email">Email address</label>
-          <input id="email" class="field-input" type="email" autocomplete="email" placeholder="customer@example.com (optional)" />
-          <p class="field-error" id="emailError">That email doesn’t look right.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Next of kin -->
-    <section>
-      <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 ml-1 flex items-center gap-2">
-        <i class="fa-solid fa-people-roof text-[10px]"></i>
-        <span>Next of kin</span>
-      </h2>
-
-      <div class="rounded-2xl bg-white border border-stone-200 p-5 space-y-4">
-        <div>
-          <label class="field-label" for="nextOfKin">Next of kin <span class="text-red-500">*</span></label>
-          <input id="nextOfKin" class="field-input" type="text" required />
-          <p class="field-error" id="nextOfKinError">Please enter the next of kin’s name.</p>
-        </div>
-
-        <div>
-          <label class="field-label" for="nextOfKinPhone">Next of kin phone <span class="text-red-500">*</span></label>
-          <input id="nextOfKinPhone" class="field-input" type="tel" required />
-          <p class="field-error" id="nextOfKinPhoneError">Please enter a valid phone number.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Additional details -->
-    <section>
-      <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 ml-1 flex items-center gap-2">
-        <i class="fa-solid fa-location-dot text-[10px]"></i>
-        <span>Additional details</span>
-      </h2>
-
-      <div class="rounded-2xl bg-white border border-stone-200 p-5 space-y-4">
-        <div>
-          <label class="field-label" for="digitalAddress">Digital address</label>
-          <input id="digitalAddress" class="field-input" type="text" placeholder="e.g. GA-123-4567 (optional)" />
-        </div>
-
-        <div>
-          <label class="field-label" for="notes">Notes</label>
-          <textarea id="notes" class="field-input" rows="3" placeholder="Any additional information (optional)"></textarea>
-        </div>
-      </div>
-    </section>
-
-    <!-- Status -->
-    <section>
-      <h2 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold mb-3 ml-1 flex items-center gap-2">
-        <i class="fa-solid fa-toggle-on text-[10px]"></i>
-        <span>Account status</span>
-      </h2>
-
-      <div class="rounded-2xl bg-white border border-stone-200 p-5">
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" data-status="active"
-                  class="status-pill py-3 px-4 rounded-xl border-2 text-[13px] font-semibold flex items-center justify-center gap-2">
-            <i class="fa-solid fa-circle-check text-[12px]"></i> Active
-          </button>
-          <button type="button" data-status="inactive"
-                  class="status-pill py-3 px-4 rounded-xl border-2 text-[13px] font-semibold flex items-center justify-center gap-2">
-            <i class="fa-solid fa-circle-pause text-[12px]"></i> Inactive
-          </button>
-        </div>
-        <p class="text-[11px] text-stone-500 mt-3 leading-relaxed">
-          <i class="fa-solid fa-circle-info text-[10px] mr-1 text-stone-400"></i>
-          Inactive customers keep their full history. Set to inactive if a customer stops saving.
-        </p>
-      </div>
-    </section>
+  <form id="editForm" class="space-y-5 fade-up hidden" novalidate>
+    <div id="formFields"></div>
+    <button id="saveBtn" type="submit"
+            class="w-full py-3.5 bg-[#212121] hover:bg-black active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow transition-all flex items-center justify-center gap-2">
+      <i class="fa-solid fa-check text-[12px]"></i> <span>Save changes</span>
+    </button>
   </form>
 </main>
 
-<!-- ================= STICKY ACTIONS ================= -->
-<div class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 pb-[env(safe-area-inset-bottom)]">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-2 gap-3">
-    <a id="cancelBtn" href="customers.html"
-       class="py-3.5 bg-white border border-stone-300 hover:bg-stone-50 text-stone-900 text-sm font-semibold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
-      <i class="fa-solid fa-xmark text-[12px]"></i>
-      <span>Cancel</span>
-    </a>
-    <button id="saveBtn" type="button"
-            class="py-3.5 bg-[#212121] hover:bg-black active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow transition-all flex items-center justify-center gap-2">
-      <i class="fa-solid fa-check text-[12px]"></i>
-      <span id="saveBtnLabel">Save changes</span>
-      <i id="saveBtnSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-[12px]"></i>
-    </button>
-  </div>
-</div>
-
-<!-- ================= SCRIPT ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore,
-  doc, getDoc, updateDoc, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* ---------- Firebase ---------- */
-const app = initializeApp({
-  apiKey: "AIzaSyACzsITf1wON6R4vmJQR8cpA6qF7PDw2pY",
-  authDomain: "area-supa-ventures.firebaseapp.com",
-  projectId: "area-supa-ventures",
-  storageBucket: "area-supa-ventures.firebasestorage.app",
-  messagingSenderId: "339989502774",
-  appId: "1:339989502774:web:6cbf99587d4317af0a7197",
-  measurementId: "G-WDJCSK78QE"
-});
-const auth = getAuth(app);
-let db;
-try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
-catch { db = getFirestore(app); }
-
-/* ---------- Refs ---------- */
-const $ = (id) => document.getElementById(id);
-const params = new URLSearchParams(location.search);
-const customerId = params.get('id');
-
-if (!customerId) window.location.replace('customers.html');
-
-const backBtn = $('backBtn'), cancelBtn = $('cancelBtn'), headerSub = $('headerSub');
-const loadError = $('loadError'), loadErrorMsg = $('loadErrorMsg'), retryBtn = $('retryBtn');
-const saveError = $('saveError'), saveErrorMsg = $('saveErrorMsg');
-
-const avatar = $('avatar'), displayName = $('displayName');
-const displayAccount = $('displayAccount'), displayRegistered = $('displayRegistered');
-
-const fullNameEl = $('fullName'), phoneEl = $('phone'), emailEl = $('email');
-const nextOfKinEl = $('nextOfKin'), nokPhoneEl = $('nextOfKinPhone');
-const digitalEl = $('digitalAddress'), notesEl = $('notes');
-const statusButtons = document.querySelectorAll('.status-pill');
-
-const saveBtn = $('saveBtn'), saveBtnTop = $('saveBtnTop');
-const saveBtnLabel = $('saveBtnLabel'), saveBtnSpinner = $('saveBtnSpinner');
-
-/* ---------- State ---------- */
-let customer = null;
-let selectedStatus = 'active';
-
-/* ---------- Helpers ---------- */
-function normalizePhone(raw) { return String(raw || '').replace(/\D/g, ''); }
-function isValidGhanaPhone(digits) {
-  if (digits.length === 10 && digits.startsWith('0')) return true;
-  if (digits.length === 12 && digits.startsWith('233')) return true;
-  if (digits.length === 9) return true;
-  return false;
-}
-function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-function initialsFrom(name) {
-  if (!name) return '??';
-  const p = String(name).trim().split(/\s+/);
-  return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '??';
-}
-function tsToDate(v) { if (!v) return null; if (v.toDate) return v.toDate(); if (v instanceof Date) return v; return new Date(v); }
-
-function showFieldError(id, show = true) {
-  const el = document.getElementById(id);
-  if (el) el.classList.toggle('show', show);
-}
-function clearFieldErrors() {
-  ['fullNameError','phoneError','emailError','nextOfKinError','nextOfKinPhoneError']
-    .forEach((id) => showFieldError(id, false));
-  saveError.classList.add('hidden');
-}
-
-/* ---------- Load ---------- */
-async function loadCustomer() {
-  loadError.classList.add('hidden');
-  try {
-    const snap = await getDoc(doc(db, 'customers', customerId));
-    if (!snap.exists()) {
-      loadErrorMsg.textContent = 'This customer could not be found.';
-      loadError.classList.remove('hidden');
-      return;
-    }
-    customer = { id: snap.id, ...snap.data() };
-    populateForm();
-  } catch (e) {
-    console.error('Load failed:', e);
-    loadErrorMsg.textContent = navigator.onLine
-      ? 'Could not reach the server. Check your connection and retry.'
-      : 'You’re offline. Reconnect to load this customer.';
-    loadError.classList.remove('hidden');
-  }
-}
-
-function populateForm() {
-  const c = customer;
-
-  // Read-only card
-  avatar.textContent = initialsFrom(c.fullName);
-  displayName.textContent = c.fullName || 'Unnamed';
-  displayAccount.textContent = c.accountNumber || '—';
-  const reg = tsToDate(c.createdAt);
-  displayRegistered.textContent = reg
-    ? 'Registered ' + reg.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '';
-
-  // Header subtitle
-  headerSub.textContent = `${c.fullName || 'Customer'} · ${c.accountNumber || ''}`;
-
-  // Back button goes to profile
-  backBtn.href = `customer.html?id=${encodeURIComponent(c.id)}`;
-  cancelBtn.href = `customer.html?id=${encodeURIComponent(c.id)}`;
-
-  // Form fields
-  fullNameEl.value = c.fullName || '';
-  phoneEl.value = c.phone || '';
-  emailEl.value = c.email || '';
-  nextOfKinEl.value = c.nextOfKin || '';
-  nokPhoneEl.value = c.nextOfKinPhone || '';
-  digitalEl.value = c.digitalAddress || '';
-  notesEl.value = c.notes || '';
-
-  selectedStatus = c.status === 'inactive' ? 'inactive' : 'active';
-  applyStatusStyles();
-
-  // Enable save after hydration
-  saveBtn.disabled = false;
-  saveBtnTop.disabled = false;
-}
-
-/* ---------- Status pills ---------- */
-function applyStatusStyles() {
-  statusButtons.forEach(b => {
-    const active = b.getAttribute('data-status') === selectedStatus;
-    b.className = 'status-pill py-3 px-4 rounded-xl border-2 text-[13px] font-semibold flex items-center justify-center gap-2 ' + (
-      active
-        ? 'border-brand-gold bg-brand-gold/10 text-stone-900'
-        : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'
-    );
-  });
-}
-
-statusButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    selectedStatus = btn.getAttribute('data-status');
-    applyStatusStyles();
-  });
-});
-
-/* ---------- Validation ---------- */
-function validate() {
-  clearFieldErrors();
-  let ok = true;
-
-  const name = fullNameEl.value.trim();
-  const phoneDigits = normalizePhone(phoneEl.value);
-  const email = emailEl.value.trim();
-  const nok = nextOfKinEl.value.trim();
-  const nokDigits = normalizePhone(nokPhoneEl.value);
-
-  if (!name || name.length < 3) { showFieldError('fullNameError', true); ok = false; }
-  if (!phoneDigits || !isValidGhanaPhone(phoneDigits)) { showFieldError('phoneError', true); ok = false; }
-  if (email && !isValidEmail(email)) { showFieldError('emailError', true); ok = false; }
-  if (!nok || nok.length < 3) { showFieldError('nextOfKinError', true); ok = false; }
-  if (!nokDigits || !isValidGhanaPhone(nokDigits)) { showFieldError('nextOfKinPhoneError', true); ok = false; }
-
-  if (!ok) {
-    saveErrorMsg.textContent = 'Please fix the highlighted fields above.';
-    saveError.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  return ok;
-}
-
-/* ---------- Save ---------- */
-async function saveChanges() {
-  if (!validate()) return;
-  if (!customer) return;
-  if (!auth.currentUser) {
-    saveErrorMsg.textContent = 'You must be signed in.';
-    saveError.classList.remove('hidden');
-    return;
-  }
-
-  saveBtn.disabled = true;
-  saveBtnTop.disabled = true;
-  saveBtnSpinner.classList.remove('hidden');
-  saveBtnLabel.textContent = 'Saving…';
-  saveError.classList.add('hidden');
-
-  const name = fullNameEl.value.trim();
-  const phoneRaw = phoneEl.value.trim();
-  const phoneDigits = normalizePhone(phoneRaw);
-  const email = emailEl.value.trim();
-  const nok = nextOfKinEl.value.trim();
-  const nokPhoneRaw = nokPhoneEl.value.trim();
-  const nokDigits = normalizePhone(nokPhoneRaw);
-  const digital = digitalEl.value.trim();
-  const notes = notesEl.value.trim();
-
-  try {
-    const customerRef = doc(db, 'customers', customer.id);
-    await updateDoc(customerRef, {
-      fullName: name,
-      fullNameLower: name.toLowerCase(),
-      phone: phoneRaw,
-      phoneNormalized: phoneDigits,
-      email: email || null,
-      nextOfKin: nok,
-      nextOfKinPhone: nokPhoneRaw,
-      nextOfKinPhoneNormalized: nokDigits,
-      digitalAddress: digital || null,
-      notes: notes || null,
-      status: selectedStatus,
-      updatedAt: serverTimestamp()
-      // Deliberately omitted (protected by rules):
-      // accountNumber, balance, totalDeposits, totalWithdrawals,
-      // createdAt, createdBy, createdByName
-    });
-
-    // Success → brief toast then redirect
-    showToast('Changes saved');
-    setTimeout(() => {
-      window.location.replace(`customer.html?id=${encodeURIComponent(customer.id)}`);
-    }, 700);
-  } catch (e) {
-    console.error('Save failed:', e);
-    const msg = String(e?.message || '');
-    if (msg.toLowerCase().includes('permission')) {
-      saveErrorMsg.textContent = 'Permission denied. Only profile fields can be edited.';
-    } else if (!navigator.onLine) {
-      saveErrorMsg.textContent = 'You’re offline. Reconnect and try again. Your changes are still here.';
-    } else {
-      saveErrorMsg.textContent = 'Could not save changes. Please try again.';
-    }
-    saveError.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    saveBtn.disabled = false;
-    saveBtnTop.disabled = false;
-    saveBtnSpinner.classList.add('hidden');
-    saveBtnLabel.textContent = 'Save changes';
-  }
-}
-
-function showToast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast fixed bottom-24 left-1/2 z-[60] px-4 py-2.5 rounded-xl bg-stone-900 text-white text-[12.5px] font-medium shadow-lg';
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => {
-    el.style.transition = 'opacity 250ms';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 300);
-  }, 500);
-}
-
-saveBtn.addEventListener('click', saveChanges);
-saveBtnTop.addEventListener('click', saveChanges);
-retryBtn.addEventListener('click', loadCustomer);
-
-/* ---------- Auth guard ---------- */
-onAuthStateChanged(auth, (u) => {
-  if (!u) { window.location.replace('index.html'); return; }
-  loadCustomer();
-});
-</script>
-
+<script type="module" src="js/edit-customer.js"></script>
 </body>
 </html>
